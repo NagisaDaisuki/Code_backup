@@ -1,931 +1,199 @@
-/*
-	Generic Alogrithm
-*/
+#include "widget.h"
 
-#define _CRT_SECURE_NO_WARNINGS
+#include <QApplication>
+#include <QLabel>
+#include <QLineEdit>
+#include <QSpinBox>
+#include <QComboBox>
+#include <QCheckBox>
+#include <QGroupBox>
+#include <QRadioButton>
+#include <QPushButton>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QMessageBox>
+#include <QSpacerItem>
+#include <QShortcut>
+#include <QKeySequence>
+#include <QPainter>
 
-#include <iostream>
-#include <string>
-#include <vector>
-#include <list>
-#include <set>
-#include <sstream>
-#include <fstream>
-#include <cstdio>
-#include <cstring>
-#include <functional>
+//æ§½å‡½æ•°å£°æ˜
+void on_saveButton_clicked();
+void on_cancelButton_clicked(QWidget*);
+void on_clearButton_clicked(QLineEdit*);
 
-#include <algorithm>
-#include <numeric>
-#include <iterator>
-//#include <>
-
-#ifndef _START
-#define _START
-
-
-
-
-//void suoper_sort(const std::string& str)
-//{
-//	std::stable_sort(str.begin(), str.end(), [](const std::string &a,const std::string &b){
-//		return a.size() < b.size();
-//	});
-//
-//	auto it = std::partition(str.begin(),str.end(),[](const std::string& std){
-//		return std.size() >= 5;
-//	});
-//
-//	for (auto i = str.begin(); i != it; i++)
-//	{
-//		std::cout << *i << " ";
-//	}
-//	std::cout << std::endl;
-//
-//	
-//
-//}
-//void test()
-//{
-//	std::string str = "hello C++ and your best fellow python!";
-//	suoper_sort(str); //ÎŞ·¨½«²ÎÊı´ÓcharÀàĞÍ×ª»»Îªstd::string<char,std::char_traits<char>,std::allocator<char
-//}
-
-namespace Lambda_expression
+//è‡ªå®šä¹‰ä¸€ä¸ªæŒ‰é’®ç±»å‹,è®¾ç½®è¿™ä¸ªæŒ‰é’®ç±»å‹çš„é¢œè‰²
+class GradientButton : public QPushButton
 {
-	std::vector<std::string> strVec{"hello", "name", "beautify", "aesthetic", "sentiment"};
-	//lambda±í´ïÊ½
-	bool isShorter(const std::string& s1, const std::string& s2)
-	{
-		return s1.size() < s2.size();
-	}
-
-	void elimDups(std::vector<std::string> words)
-	{
-		std::stable_sort(words.begin(), words.end(), [](const std::string& s1, const std::string& s2)
-			{
-				return s1.size() < s2.size();
-			}); //ÎÈÅÅ(°´×ÖµäĞò)
-
-		std::vector<std::string>::iterator it = std::unique(words.begin(), words.end()); //È¥ÖØ
-		words.erase(it, words.end()); //É¾È¥ÖØ¸´µÄÔªËØ
-	}
-
-	std::string make_plural(size_t ctr, const std::string& words, const std::string& ending)
-	{
-		return (ctr > 1) ? words + ending : words;
-	}
-
-	void biggies(std::vector<std::string>& words, std::vector<std::string>::size_type sz)
-	{
-		elimDups(strVec); //½«words°´×ÖµäĞòÅÅĞò£¬É¾³ıÖØ¸´µ¥´Ê
-		auto wc = std::find_if(words.begin(), words.end(), [sz](const std::string& a) {
-			return a.size() >= sz;
-
-			}); //¶Ôfind_ifµÄµ÷ÓÃ·µ»ØÒ»¸öµü´úÆ÷£¬Ö¸ÏòµÚÒ»¸ö²ÎÊı³¤¶È²»Ğ¡ÓÚ¸ø¶¨²ÎÊıszµÄÔªËØ
-		//Èç¹ûÕâÑùµÄ²ÎÊı²»´æÔÚ£¬Ôò·µ»Øwords.end()µÄÒ»¸ö¿½±´
-
-	//¼ÆËãÂú×ãsize >= sz µÄÔªËØµÄÊıÁ¿
-		auto count = words.end() - wc;
-		std::cout << count << " " << make_plural(count, "word", "s") << " of length " << sz << " or longer" << std::endl;
-
-		//´òÓ¡³¤¶È´óÓÚµÈÓÚ¸ø¶¨ÖµµÄµ¥´Ê£¬Ã¿¸öµ¥´ÊºóÃæ½ÓÒ»¸ö¿Õ¸ñ
-		std::for_each(wc, words.end(), [](const std::string& s) {std::cout << s << " "; });
-		std::cout << std::endl;
-	}
-
-
-
-	//before episode01
-	void test_find_if()
-	{
-		//std::find_ifÊÇC++ÖĞ<algorithm>Í·ÎÄ¼şÖĞµÄÒ»¸öº¯Êı£¬ÓÃÓÚÔÙÈİÆ÷ÖĞ²éÕÒÂú×ãÌØ¶¨Ìõ¼şµÄÔªËØ
-		//½ÓÊÜÁ½¸öµü´úÆ÷ºÍÒ»¸öÎ½´Êº¯Êı×÷Îª²ÎÊı
-		//È»ºó·µ»ØµÚÒ»¸öÂú×ãÎ½´ÊÌõ¼şµÄÔªËØµÄµü´úÆ÷¡£Èç¹ûÕÒ²»µ½Æ¥ÅäµÄÔªËØ
-		//Ôò·µ»ØÎ²²¿µü´úÆ÷
-
-		std::vector<int> numbers = { 1,2,3,4,5,6,7,8,9,10 };
-		int target = 5;
-
-		//Ê¹ÓÃfind_if²éÕÒµÚÒ»¸ö´óÓÚÄ¿±êÖµµÄÔªËØ
-		auto it = std::find_if(numbers.begin(), numbers.end(), [target](int value)
-			{
-				return value > target;
-			}
-		);
-
-		//¼ì²éÊÇ·ñÕÒµ½ÁËÂú×ãÌõ¼şµÄÔªËØ
-		if (it != numbers.end())   
-		{
-			std::cout << "ÕÒµ½µÚÒ»¸ö´óÓÚ" << target << "µÄÔªËØ£º" << *it << std::endl;
-		}
-		else
-		{
-			std::cout << "Î´ÕÒµ½Âú×ãÌõ¼şµÄÔªËØ." << std::endl;
-		}
-	}
-	void episode01()
-	{
-		//ÒÑ¾­Ê¹ÓÃ¹ıµÄ¿Éµ÷ÓÃ¶ÔÏó£ºº¯ÊıºÍº¯ÊıÖ¸Õë
-		//»¹ÓĞÁ½¸ö¿Éµ÷ÓÃ¶ÔÏó£ºÖØÔØÁËº¯Êıµ÷ÓÃÔËËã·ûµÄÀàºÍlambda±í´ïÊ½
-		//lambda±í´ïÊ½±íÊ¾Ò»¸ö¿Éµ÷ÓÃµÄ´úÂëµ¥Ôª£¬¿ÉÒÔ½«ÆäÀí½âÎªÒ»¸öÎ´ÃüÃûµÄÄÚÁªº¯Êı
-		// Ò»¸ölambda¾ßÓĞÒ»¸ö·µ»ØÀàĞÍ¡¢Ò»¸ö²ÎÊıÁĞ±íºÍÒ»¸öº¯ÊıÌå
-		// µ«Óëº¯Êı²»Í¬£¬lambda¿ÉÄÜ¶¨ÒåÔÙº¯ÊıÄÚ²¿
-		// lambda±í´ïÊ½¿ÉÒÔºöÂÔ²ÎÊıÁĞ±íºÍ·µ»ØÀàĞÍ£¬µ«±ØĞëÓÀÔ¶°üº¬²¶»ñÁĞ±íºÍº¯ÊıÌå
-		// 
-		//ÇóÒ»¸ö´óÓÚµÈÓÚÒ»¸ö¸ø¶¨³¤¶ÈµÄµ¥´ÊÓĞ¶àÉÙ²¢Ê¹³ÌĞòÖ»´òÓ¡´óÓÚµÈÓÚ¸ø¶¨³¤¶ÈµÄµ¥´Ê
-
-		//lambda±í´ïÊ½ºÍºÍÆÕÍ¨º¯Êıµ÷ÓÃÇø±ğÔÚÓÚ
-		//lambda²»ÄÜÓĞÄ¬ÈÏ²ÎÊı£¬Ò²¾ÍÊÇlambda±í´ïÊ½µ÷ÓÃµÄÊµ²ÎÊıÁ¿ÓÀÔ¶ºÍĞÎ²ÎÏàµÈ
-
-		std::vector<std::string> v = { "hello","nihao","xilanai","amidnight","cumming" };
-		std::size_t siz = 6;
-		//biggies(v, siz);
-
-		auto sum = [](int a, int b) { std::cout << a << " + " << b << " = " << a + b << "."; return a + b; };
-		int res = sum(1, 2);
-
-		std::function<int(int)> test = [res](int t) {return res + t; };
-		//std::functionÊÇÒ»¸öÍ¨ÓÃµÄº¯Êı·â×°Æ÷£¬¿ÉÓÃÓÚ´æ´¢ÈÎÒâ¿Éµ÷ÓÃ¶ÔÏó£¬°üº¬º¯ÊıÖ¸Õë¡¢º¯Êı¶ÔÏó¡¢³ÉÔ±º¯ÊıÖ¸Õë
-		//lambda±í´ïÊ½
-
-
-
-
-	}
-
-	template<typename Callable>
-	void myFunction(Callable func)
-	{
-		func(3, 4); //Ê¹ÓÃÄ£°å²ÎÊı½ÓÊÕlambda±í´ïÊ½(ºÍautoÀàËÆ)
-	}
-
-	void test_temp()
-	{
-		//lambda±í´ïÊ½µÄÀàĞÍÓÉ±àÒëÆ÷¸ù¾İÆäÄÚÈİ×Ô¶¯ÍÆ¶Ï£¬Í¨³£¿ÉÒÔÊ¹ÓÃauto¹Ø¼ü×Ö½ÓÊÜlambda±í´ïÊ½¡£Ê¹ÓÃauto¿É
-		//ÒÔÊ¹´úÂë¸üÁé»î£¬ÒòÎªËüÔÊĞí±äÁ¿µÄÀàĞÍ¸ù¾İ³õÊ¼»¯±í´ïÊ½×Ô¶¯ÍÆ¶Ï
-
-		//1.std::function()
-		auto lambda = [](int a, int b) {return a + b; };
-		std::function<int(int, int)> func = lambda;
-
-		//Ê¹ÓÃstd::function µ÷ÓÃlambda±í´ïÊ½
-		int result = func(3, 4);
-
-		//2.auto
-		//3.Ä£°å²ÎÊı
-		//¿ÉÒÔÊ¹ÓÃÄ£°å²ÎÊıÀ´½ÓÊÕlambda±í´ïÊ½£¬ÕâÑùº¯ÊıÄ£°å¿ÉÒÔ½ÓÊÜ²»ÓÃÀàĞÍµÄlambda
-		myFunction(lambda);
-
-		//4.º¯ÊıÖ¸Õë
-
-		//Èç¹ûlambda±í´ïÊ½Ã»ÓĞ²¶»ñÈÎºÎ±äÁ¿£¬¿ÉÒÔ½«Æä×ª»»Îª¶ÔÓ¦µÄº¯ÊıÖ¸ÕëÀàĞÍ
-		int(*funcPointer)(int, int) = [](int a, int b) {return a + b; };
-
-		//Ê¹ÓÃº¯ÊıÖ¸Õëµ÷ÓÃlambda±í´ïÊ½
-		int result1 = funcPointer(3, 4);
-	}
-
-	void _Test_partition()
-	{
-		//ÔÚC++ÖĞ£¬std::partitionÊÇalgorithmÍ·ÎÄ¼şÖĞµÄÒ»¸öº¯Êı£¬
-		//ÓÃÓÚ°´ÕÕÖ¸¶¨µÄÌõ¼ş¶ÔÈİÆ÷½øĞĞ»®·Ö(partition)
-		//¾ßÌåËµ£¬std::partition½«Âú×ãÌõ¼şµÄÔªËØÒÆ¶¯µ½ÈİÆ÷µÄÇ°²¿
-		//¶ø²»Âú×ãÌõ¼şµÄÔªËØÒÆ¶¯µ½ÈİÆ÷µÄºó²¿£¬±£³ÖËüÃÇµÄÏà¶ÔË³Ğò
-
-		//std::partition ·µ»ØÒ»¸öµü´úÆ÷£¬¸Ãµü´úÆ÷Ö¸ÏòÈİÆ÷ÖĞµÚÒ»¸ö²»Âú×ã»®·ÖÌõ¼şµÄÔªËØµÄÎ»ÖÃ
-		std::vector<int> numbers = { 1,2,3,4,5,6,7,8,9,10 };
-
-		//Ê¹ÓÃstd::partition½«ÆæÊıÒÆ¶¯µ½Ç°²¿£¬Å¼ÊıÒÆ¶¯µ½ºó²¿
-		auto it = std::partition(numbers.begin(), numbers.end(), [](int& num) {
-			return num % 2 != 0;
-			}); //Ò»ÔªÎ½´Ê(unary predicate),º¯ÊıĞÎ²ÎÁĞ±íÖµ´ÓÊäÈëĞòÁĞÖĞ²¶»ñ
-
-		//Êä³ö»®·ÖºóµÄ½á¹û
-		std::cout << "Partitioned vector: ";
-		for (auto iter = numbers.begin(); iter != it; ++iter)
-		{
-			std::cout << *iter << " ";
-		}
-		std::cout << " | ";
-		for (; it != numbers.end(); ++it)
-		{
-			std::cout << *it << " ";
-		}
-		//»®·ÖºóµÄÔªËØÏà¶ÔÎ»ÖÃ±£³Ö²»±ä(ÔÚÄÚ´æÖĞµÄÎ»ÖÃ),Ö»ÊÇ¸ù¾İ»®·ÖÌõ¼şµÄ²»Í¬ÒÆ¶¯µ½ÁË²»Í¬µÄÎ»ÖÃ
-
-
-	}
-
-	void _Test_transform()
-	{
-		/*
-			ÔÚC++ÖĞ,"std::transform"ÊÇ<algorithm>Í·ÎÄ¼şÖĞµÄÒ»¸öº¯Êı£¬ÓÃÓÚ¶ÔÈİÆ÷ÖĞµÄÔªËØÖ´ĞĞÄ³¸ö²Ù×÷
-			²¢½«½á¹û´æ´¢µ½ÁíÒ»¸öÈİÆ÷ÖĞ
-			std::transform½ÓÊÜÁ½¸ö»òÈı¸öÊäÈëµü´úÆ÷·¶Î§£¬²¢¿ÉÑ¡µØÌá¹©Ò»¸öÄ¿±êÈİÆ÷µÄÆğÊ¼µü´úÆ÷
-
-		*/
-
-		std::vector<int> source = { 1,2,3,4,5 };
-		std::vector<int> destination;
-
-		//Ê¹ÓÃstd::transform¶ÔÃ¿¸öÔªËØÖ´ĞĞ³Ë·¨²Ù×÷£¬²¢½«½á¹û´æ´¢µ½destination
-		std::transform(source.begin(), source.end(), std::back_inserter(destination), [](int x)
-			{
-				return x * 2;
-			});
-
-
-		//Êä³ö½á¹û
-		std::cout << "Source vector: ";
-		for (int num : source)
-		{
-			std::cout << num << " ";
-		}
-		std::cout << "\nDoubled vector: ";
-		for (int num : destination)
-		{
-			std::cout << num << " ";
-		}
-
-	}
-
-
-	//void _Test_count_if()
-	//{
-	//	/*
-	//		ÔÚC++ÖĞ£¬"std::count_if"ÊÇalgorithmÍ·ÎÄ¼şÖĞµÄÒ»¸öº¯Êı£¬ÓÃÓÚ
-	//		¼ÆËãÂú×ãÖ¸¶¨Ìõ¼şµÄÔªËØ¸öÊı
-	//		std::count_if½ÓÊÜÁ½¸öµü´úÆ÷²ÎÊıºÍÒ»¸öÎ½´Ê(predicate)º¯Êı
-	//		·µ»ØÂú×ãÌõ¼şµÄÔªËØ¸öÊı
-
-	//		template<class InputIt,class UnaryPredicate>
-	//		typename iterator_trait<InputIt>::difference_type
-	//		count_if(InputIt first,InputIt last,UnaryPredicate p);
-	//		//Ä£°åº¯ÊıÔ­ĞÍ
-
-	//	*/
-	//	std::vector<int> numbers = {1,2,3,4,5,6,7,8,9};
-	//	
-	//	//Ê¹ÓÃstd::count_ifÍ³¼ÆÆæÊıµÄ¸öÊı
-	//	int oddCount = std::count_if(numbers.begin(), numbers.end(), [](int num) 
-	//		{
-	//			return num % 2 != 0; //ÅĞ¶ÏÊÇ·ñÎªÆæÊı
-	//		});
-
-	//	//Êä³ö½á¹û
-	//	std::cout << "ÆæÊıµÄ¸öÊıÎª: " << oddCount << std::endl;
-
-	//}
-
-	void biggies(std::vector<std::string>& words,
-		std::vector<std::string>::size_type sz,
-		std::ostream& os = std::cout, char c = ' ')
-	{
-		elimDups(words);
-
-		//»ñÈ¡Ò»¸öµü´úÆ÷£¬Ö¸ÏòµÚÒ»¸öÂú×ãsize >= sz µÄÔªËØ
-		auto wc = std::find_if(words.begin(), words.end(), [sz](const std::string& s) { //s´ÓÊäÈëĞòÁĞ²¶»ñ
-			return s.size() >= sz;
-
-			});
-		//¼ÆËãÂú×ãsize >= szµÄÔªËØ¸öÊı£»
-		auto count = words.end() - wc;
-		std::cout << count << " " << make_plural(count, "word", "s") << " of length "
-			<< sz << " or longer." << std::endl;
-		//´òÓ¡³¤¶È´óÓÚµÈÓÚ¸ø¶¨ÖµµÄµ¥´Ê£¬Ã¿¸öµ¥´ÊºóÃæ½ÓÒ»¸ö¿Õ¸ñ
-		std::for_each(wc, words.end(), [&os, c](const std::string& s) {os << s << c; });
-
-	}
-
-	bool t(const std::string& s, std::string::size_type sz)
-	{
-		return s.size() >= sz;
-	}
-
-	std::ostream& t1(const std::string& s, std::ostream& os, char c)
-	{
-		return os << s << c;
-	}
-
-	void biggies1(std::vector<std::string>& words,
-		std::vector<std::string>::size_type sz,
-		std::ostream& os = std::cout, char c = ' ')
-	{
-		elimDups(words);
-
-		//»ñÈ¡Ò»¸öµü´úÆ÷£¬Ö¸ÏòµÚÒ»¸öÂú×ãsize >= sz µÄÔªËØ
-		auto wc = std::partition(words.begin(), words.end(), std::bind(t, std::placeholders::_1, sz));
-		//¼ÆËãÂú×ãsize >= szµÄÔªËØ¸öÊı£»
-		auto count = words.end() - wc;
-		std::cout << count << " " << make_plural(count, "word", "s") << " of length "
-			<< sz << " or longer." << std::endl;
-		//´òÓ¡³¤¶È´óÓÚµÈÓÚ¸ø¶¨ÖµµÄµ¥´Ê£¬Ã¿¸öµ¥´ÊºóÃæ½ÓÒ»¸ö¿Õ¸ñ
-		std::for_each(wc, words.end(), std::bind(t1, std::placeholders::_1, std::cref(os), c)); //Ê¹ÓÃbindº¯ÊıÊÊÅäÆ÷ÖØĞ´lambda·½·¨
-
-	}
-
-	void episode02()
-	{
-		//lambda²¶»ñºÍ·µ»Ø
-		//µ±¶¨ÒåÒ»¸ölambdaÊ±£¬±àÒëÆ÷Éú³ÉÒ»¸öÓëlambda¶ÔÓ¦µÄĞÂµÄ(Î´ÃüÃûµÄ)ÀàÀàĞÍ
-		//µ±Ò»¸öº¯Êı´«µİÒ»¸ölambdaÊ±£¬Í¬Ê±¶¨ÒåÁËÒ»¸öĞÂÀàĞÍºÍ¸ÃÀàĞÍµÄÒ»¸ö¶ÔÏó
-		//´«µİµÄ²ÎÊı¾ÍÊÇ´Ë±àÒëÆ÷Éú³ÉµÄÀàÀàĞÍµÄÎ´ÃüÃû¶ÔÏó
-
-		//lambda±í´ïÊ½ÓĞÁ½ÖÖ²¶»ñ·½·¨
-		//Öµ²¶»ñºÍÒıÓÃ²¶»ñ
-		//²ÉÓÃÖµ²¶»ñµÄÇ°ÌáÊÇ±äÁ¿¿ÉÓÃ¿½±´
-		//Ö´ĞĞÒıÓÃ²¶»ñµÄÊ±ºòĞèÒªÈ·±£lambda±í´ïÊ½Ö´ĞĞµÄÊ±ºò±»ÒıÓÃµÄ¶ÔÏóÊÇ´æÔÚµÄ
-		//	ÀàËÆostreamÀàĞÍµÄÔªËØÖ»ÄÜÍ¨¹ıÒıÓÃ´«µİ
-
-		//µ±lambda±í´ïÊ½ÔÚ²¶»ñÒ»¸öÖ¸Õë»òÕßµü´úÆ÷Ê±Ê¹ÓÃÒıÓÃ²¶»ñ£¬±ØĞëÈ·±£ÔÚlambdaÖ´ĞĞÊ±£¬°ó¶¨µ½µü´úÆ÷
-		//Ö¸Õë»òÒıÓÃµÄ¶ÔÏóÈÔÈ»´æÔÚ¡£¶øÇÒĞèÒª±£Ö¤¶ÔÏó¾ßÓĞÔ¤ÆÚµÄÖµ
-
-
-		//ÒşÊ½²¶»ñ
-		//ÔÚ²¶»ñÁĞ±íÄÚĞ´Ò»¸ö&»ò=
-		//&¸æËß±àÒëÆ÷²ÉÓÃÒıÓÃ²¶»ñ·½Ê½£¬=¸æËß±àÒëÆ÷²ÉÓÃÖµ²¶»ñ·½Ê½
-		//ÔÚlambda±í´ïÊ½ÖĞ¿ÉÒÔ»ìºÏÊ¹ÓÃÒşÊ½²¶»ñºÍÏÔÊ½²¶»ñ
-
-		//(µ±ÎÒÃÇ»ìºÏÊ¹ÓÃÒşÊ½²¶»ñºÍÏÔÊ½²¶»ñÊ±£¬²¶»ñÁĞ±íÖĞµÄµÚÒ»¸öÔªËØ±ØĞëÊÇÒ»¸ö&»ò=,
-		//´Ë·ûºÅÖ¸¶¨ÁËÄ¬ÈÏ²¶»ñ·½Ê½ÎªÒıÓÃ»òÖµ)
-
-		/*
-			µ±»ìºÏÊ¹ÓÃÒşÊ½²¶»ñºÍÏÔÊ½²¶»ñÊ±£¬ÏÔÊ½²¶»ñµÄ±äÁ¿±ØĞëÊ¹ÓÃÓëÒşÊ½²¶»ñ²»Í¬µÄ·½Ê½²¶»ñ
-		*/
-
-		//¿É±älambda
-		//Ä¬ÈÏÇé¿öÏÂ¶ÔÓÚÒ»¸öÖµ±»¿½±´µÄ±äÁ¿lambda²»»á¸Ä±äÆäÖµ
-		//Èç¹ûÎÒÃÇÏ£ÍûÄÜ¸Ä±äÒ»¸ö±»²¶»ñµÄ±äÁ¿µÄÖµ
-		//¾Í±ØĞëÔÚ²ÎÊıÁĞ±íÊ×¼ÓÉÏ¹Ø¼ü×Ömutable
-
-		size_t v1 = 42;
-		//f ¿ÉÒÔ¸Ä±äËüËù²¶»ñµÄ±äÁ¿µÄÖµ
-		auto f = [v1]() mutable {return ++v1; };
-		v1 = 0;
-		auto j = f();
-		//j == 43
-
-
-		//Ò»¸öÒıÓÃ²¶»ñµÄ±äÁ¿ÊÇ·ñ¿ÉÒÔĞŞ¸ÄÒÀÀµÓÚ´ËÒıÓÃÖ¸ÏòµÄÊÇÒ»¸öconstÀàĞÍ»¹ÊÇÒ»¸ö·ÇconstÀàĞÍ
-
-		size_t v2 = 42;
-		//k ¿ÉÒÔĞŞ¸Ä²¶»ñµÄ±äÁ¿ÒıÓÃµÄÖµ
-		auto k = [&v2]()mutable {return ++v2; };
-		v2 = 0;
-		auto m = k();
-		//m == 0
-
-
-
-		/*
-			Ö¸¶¨lambda·µ»ØÀàĞÍ
-
-		*/
-		//Ä¿µÄÎ»ÖÃµü´úÆ÷Óë±íÊ¾ÊäÈëĞòÁĞ¿ªÊ¼Î»ÖÃµÄµü´úÆ÷¿ÉÒÔÏàÍ¬
-
-		//ÔÚÄ³Ğ©Ê±ºòÊ¹ÓÃlambdaÊ±±ØĞëÏÔÊ½Ö¸³ölambdaµÄ·µ»ØÖµ
-		//ÔÚlambda±í´ïÊ½ÉÏ±ØĞëÊ¹ÓÃÎ²ÖÃ·µ»ØÀàĞÍ
-
-		std::vector<int> vi = { 1,2,3,4,5,6,7,8,9 };
-
-		std::transform(vi.begin(), vi.end(), vi.begin(), [](int i)
-			{
-				return i < 0 ? -i : i;
-			}); //ÕâÀïlambda×Ô¶¯ÍÆ¶Ï·µ»ØÀàĞÍÎªint
-		std::transform(vi.begin(), vi.end(), vi.begin(), [](int i)
-			{
-				if (i < 0)
-					return -i;
-				else
-					return i;
-			}
-		); //ÔÚÄ³Ğ©±àÒëÆ÷ÉÏ»á²úÉú±àÒë´íÎó(²»ÄÜÍÆ¶ÏlambdaµÄ·µ»ØÀàĞÍ)
-
-		std::transform(vi.begin(), vi.end(), vi.begin(), [](int i)->int {
-			if (i < 0)
-				return -i;
-			else
-				return i;
-
-			});
-		//±àÒë³É¹¦
-
-	}
-
-	/*void test_(std::string::size_type sz)
-	{
-		std::vector<std::string> str = {"mobile","consequence","startrail","monster","sailor","anger",};
-		std::string::size_type cnt = std::count_if(str.begin(), str.end(), [sz](const std::string& s)
-			{
-				return s.size() > sz;
-			});
-
-		std::cout << "×Ö·û´®¼¯ºÏÖĞ³¤¶È´óÓÚ" << sz << "µÄ×Ö·û´®¸öÊıÎª: " << cnt << std::endl;
-
-	}
-
-	void test__()
-	{
-		int te = 5;
-		auto f = [&te](int sz)mutable ->bool{
-			if (te > 0)
-			{
-				--te;
-				return false;
-			}
-			else if(te == 0)
-			{
-				return true;
-			}
-			else
-			{
-				return false;
-			}
-		};
-	}*/
-	bool check_size(const std::string& s, std::string::size_type sz)
-	{
-		return s.size() >= sz;
-	}
-
-	std::ostream& print(std::ostream& os, const std::string& s, char c)
-	{
-		return os << s << c;
-	}
-
-	void episode03(std::string::size_type sz)
-	{
-		/*
-			²ÎÊı°ó¶¨
-		*/
-
-		//¶ÔÓÚÖ»ÔÚÒ»Á½¸öµØ·½Ê¹ÓÃµÄ¼òµ¥²Ù×÷£¬lambda±í´ïÊ½ÊÇ×îÓĞÓÃµÄ¡£
-		//Èç¹ûÎÒÃÇÒªÔÚºÜ¶àµØ·½Ê¹ÓÃÏàÍ¬µÄ²Ù×÷£¬Í¨³£Ó¦¸Ã¶¨ÒåÒ»¸öº¯Êı
-		//¶ø²»ÊÇ¶à´Î±àĞ´ÏàÍ¬µÄlambda±í´ïÊ½
-
-		//Èç¹ûlambda±í´ïÊ½µÄ²¶»ñÁĞ±íÎª¿Õ£¬Í¨³£¿ÉÒÔÓÃº¯ÊıÀ´Ìæ´úlambda
-		//µ«ÊÇ¶ÔÓÚ²¶»ñ¾Ö²¿±äÁ¿µÄlambda£¬ÓÃº¯Êı¾Í²»Ì«ºÃÌæ»»ÁË
-		/*
-			bool check_size(const std::string& s,std::string::size_type sz)
-			{
-				return s.size() >= sz;
-			} //ÔÚÉÏÃæµÄbiggiesº¯ÊıÄÚµÄfind_ifÎ½´Ê¿ÉÓÃº¯ÊıÌæ»»
-				//µ«ÊÇ²»ÄÜÓÃÕâ¸öº¯Êı×÷Îªfind_ifµÄÒ»¸ö²ÎÊı
-				//find_if½ÓÊÜÒ»¸öÒ»ÔªÎ½´Ê
-				//Òò´Ë´«µİ¸øfind_ifµÄ¿Éµ÷ÓÃ¶ÔÏó±ØĞë½ÓÊÜµ¥Ò»²ÎÊı
-
-				//lambda±í´ïÊ½¿ÉÓÃ²¶»ñÁĞ±í²¶»ñº¯ÊıÄÚ¾Ö²¿±äÁ¿
-				//µ«º¯Êı¾ÍÖ»ÄÜÓÃ²ÎÊıÁĞ±í²¶»ñÒ»¸öµ¥Ò»²ÎÊı
-
-		*/
-
-		/*
-			±ê×¼¿âbindº¯Êı
-
-		*/
-
-		/*
-			bindº¯Êı¶¨ÒåÔÚfunctionalÍ·ÎÄ¼şÖĞ,¿ÉÒÔ½«bind¿´×÷ÊÇÒ»¸öÍ¨ÓÃµÄº¯ÊıÊÊÅäÆ÷
-			Ëü½ÓÊÜÒ»¸ö¿Éµ÷ÓÃ¶ÔÏó£¬Éú³ÉÒ»¸öĞÂµÄ¿Éµ÷ÓÃ¶ÔÏóÀ´"ÊÊÓ¦"Ô­¶ÔÏóµÄ²ÎÊıÁĞ±í
-			auto newCallable = std::bind(callable,arg_list);
-
-		*/
-
-
-		/*
-			°ó¶¨check_sizeµÄsz²ÎÊı
-
-		*/
-		auto check6 = std::bind(check_size, std::placeholders::_1, 6); //_1 using std::placeholders::_1; using namespace std::placeholders;
-
-		//Õâ¸öbindµ÷ÓÃÖ»ÓĞÒ»¸öÕ¼Î»·û£¬±íÊ¾check6Ö»½ÓÊÕµ¥Ò»²ÎÊı¡£Õ¼Î»·û³öÏÖÔÚarg_listµÄµÚÒ»¸öÎ»ÖÃ
-		//±íÊ¾check6µÄ´Ë²ÎÊı¶ÔÓ¦check_sizeµÄµÚÒ»¸ö²ÎÊı¡£´Ë²ÎÊıÊÇconst std::string
-		//Òò´Ëµ÷ÓÃcheck6Ö»ĞèÒª´«µİÒ»¸öµ¥Ò»const std::string ²ÎÊı
-		//check6»á½«´Ë²ÎÊı´«µİ¸øcheck_size 
-		std::vector<std::string> words = { "" };
-		std::string s = "hello";
-		bool b1 = check6(s);
-		auto wc = std::find_if(words.begin(), words.end(), std::bind(check_size, std::placeholders::_1, sz));
-
-
-		//bindµÄ²ÎÊı°ó¶¨
-		/*
-		* ¼ÙÉèfÊÇÒ»¸ö¿Éµ÷ÓÃ¶ÔÏó ÓĞ5¸ö²ÎÊı,a,b,cÎªº¯ÊıÄÚ¿É·ÃÎÊµÄ¾Ö²¿±äÁ¿
-			auto g = std::bind(f,a,b,std::placeholders::_2,c,std::placeholders::_1);
-			Éú³ÉÒ»¸öĞÂµÄ¿Éµ÷ÓÃ¶ÔÏó g£¬Õâ¸ö¶ÔÏóÓĞÁ½¸ö²ÎÊı·Ö±ğÓÃÕ¼Î»·û_2ºÍ_1±íÊ¾¡£
-			Õâ¸öĞÂµÄ¿Éµ÷ÓÃ¶ÔÏó½«Ëü×Ô¼ºµÄ²ÎÊı×÷ÎªµÚÈı¸ö²ÎÊıºÍµÚÎå¸ö²ÎÊı´«µİ¸øf
-
-
-			´«µİ¸øgµÄ²ÎÊı°´ÕÕÎ»ÖÃ°ó¶¨µ½Õ¼Î»·û
-			µÚÒ»¸ö²ÎÊı°ó¶¨µ½_1,µÚ¶ş¸ö²ÎÊı°ó¶¨µ½_2
-			¼´µ±µ÷ÓÃgÊ±ÆäµÚÒ»¸ö²ÎÊı½«±»´«µİ¸øf×÷Îª×îºóÒ»¸ö²ÎÊı£¬µÚ¶ş¸ö²ÎÊı½«±»´«µİ¸øf×÷ÎªµÚÈı¸ö²ÎÊı
-
-			g(_1,_2) == f(a,b,_2,c,_1)
-
-
-		*/
-
-		//ÓÃbindÖØÅÅ²ÎÊıË³Ğò
-
-		//¿ÉÒÔÊ¹ÓÃbind(Í¨ÓÃº¯ÊıÊÊÅäÆ÷)µßµ¹isShorterµÄÒâË¼
-		std::sort(words.begin(), words.end(), isShorter); //Õı³£Ê¹ÓÃsortºÍÒ»ÔªÎ½´Ê
-		//°´µ¥´Ê³¤¶ÈÓÉ¶ÌÖÁ³¤ÅÅĞò
-		std::sort(words.begin(), words.end(), std::bind(isShorter, std::placeholders::_2, std::placeholders::_1));
-		//°´µ¥´Ê³¤¶ÈÓÉ³¤ÖÁ¶ÌÅÅĞò
-
-
-
-		//bind(Í¨ÓÃº¯ÊıÊÊÅäÆ÷)°ó¶¨ÒıÓÃ²ÎÊı
-		/*
-			Ä¬ÈÏÇé¿öÏÂ£¬bindµÄÄÇĞ©²»ÊÇÕ¼Î»·ûµÄ²ÎÊı±»*¿½±´*µ½bind·µ»ØµÄ¿Éµ÷ÓÃ¶ÔÏóÖĞ
-			µ«ÊÇÓëlambdaÀàËÆ£¬ÓĞÊ±¶ÔÓĞĞ©°ó¶¨µÄ²ÎÊıÎÒÃÇÏ£ÍûÒÔÒıÓÃ·½Ê½´«µİ£¬»òÊÇÒª°ó¶¨²ÎÊıµÄÀàĞÍÎŞ·¨¿½±´std::ostream
-
-
-			std::for_each(words.begin(),words.end(),[&os,c](const string &s){os << s << c;}); //Ìæ»»Ò»¸öÒıÓÃ·½Ê½²¶»ñostreamµÄlambda
-
-			std::ostream &print(std::ostream &os,const std::string &s,char c)
-			{
-				return os << s << c;
-			}
-
-			std::for_each(words.begin(),words.end(),std::bind(print,os,std::placeholders:_1,' '));//´íÎó£º²»ÄÜÖ±½ÓÓÃbindÀ´´úÌæ¶ÔosµÄ²¶»ñ
-			Ô­ÒòÔÚÓÚbind¿½±´ÆäËû²ÎÊı£¬¶øÎÒÃÇ²»ÄÜ¿½±´Ò»¸öostreamÀàĞÍµÄ²ÎÊı
-			ÕâÀïĞèÒªÊ¹ÓÃ±ê×¼¿ârefº¯Êı
-			std::for_each(words.begin(),words.end(),std::bind(print,std::ref(os),std::placeholders::_1,' '));
-			º¯Êıref·µ»ØÒ»¸ö¶ÔÏó£¬°üº¬¸ø¶¨µÄÒıÓÃ£¬´Ë¶ÔÏóÊÇ¿ÉÒÔ¿½±´µÄ
-			±ê×¼¿âÖĞ»¹ÓĞÒ»¸öcrefº¯ÊıÉú³ÉÒ»¸ö±£´æconstÒıÓÃµÄÀà
-			refºÍcref¶¼¶¨ÒåÔÚfuctionalÍ·ÎÄ¼şÖĞ
-
-		*/
-		std::ostream& os = std::cout;
-		std::for_each(words.begin(), words.end(), std::bind(print, os, std::placeholders::_1, ' '));//´íÎó£º²»ÄÜÖ±½ÓÓÃbindÀ´´úÌæ¶ÔosµÄ²¶»ñ
-
-		std::for_each(words.begin(), words.end(), std::bind(print, std::ref(os), std::placeholders::_1, ' ')); //std::cref(os)
-	}
-
-
-	//bool yuuka(std::string& s,std::string::size_type sz)
-	//{
-	//	return s.size() > sz;
-	//}
-
-	//void test_(std::string::size_type sz)
-	//{
-	//	std::vector<std::string> str = { "mobile","consequence","startrail","monster","sailor","anger", };
-	//	std::string::size_type cnt = std::count_if(str.begin(), str.end(),std::bind(yuuka,std::placeholders::_1,sz)); //¿Éµ÷ÓÃ¶ÔÏóÖ»½ÓÊÜµ¥Ò»²ÎÊı
-
-	//	std::cout << "×Ö·û´®¼¯ºÏÖĞ³¤¶È´óÓÚ" << sz << "µÄ×Ö·û´®¸öÊıÎª: " << cnt << std::endl;
-
-	//}
-
-	bool check_size_test(const std::string& s, std::string::size_type sz)
-	{
-		return s.size() > sz;
-	}
-
-	void _test_challenging(std::string& s, std::vector<int> vec)
-	{
-		//ÕÒµ½µÚÒ»¸ö´óÓÚstring³¤¶ÈµÄÖµ
-		auto it = std::find_if(vec.begin(), vec.end(), std::bind(check_size_test, std::placeholders::_1, s.size())); //Õ¼Î»·û´ÓÊäÈëĞòÁĞÖĞ²¶»ñÖµ
-		std::cout << "µÚÒ»¸ö´óÓÚstring³¤¶ÈµÄÖµÎª:" << *it << std::endl;
-	}
-
-
-
-
-
-
-
-
-
-	/*
-		ÔÙÌ½µü´úÆ÷
-		±ê×¼¿âÔÚÍ·ÎÄ¼şiteratorÖĞ»¹¶¨ÒåÁË¶îÍâ¼¸ÖÖµü´úÆ÷
-
-		²åÈëµü´úÆ÷(insert iterator): ÕâĞ©µü´úÆ÷±»°ó¶¨ÔÚÒ»¸öÈİÆ÷ÉÏ£¬¿ÉÒÔÀ´ÏòÈİÆ÷²åÈëÔªËØ
-
-		Á÷µü´úÆ÷(stream iterator): ÕâĞ©µü´úÆ÷±»°ó¶¨µ½ÊäÈë»òÊä³öÁ÷ÉÏ£¬¿ÉÒÔÓÃÀ´±éÀúËùÓĞ¹ØÁªµÄIOÁ÷
-
-		·´Ïòµü´úÆ÷(reverse iterator): ÕâĞ©µü´úÆ÷Ïòºó¶ø²»ÊÇÏòÇ°ÒÆ¶¯£¬³ıÁËforward_listÖ®ÍâµÄ±ê×¼¿âÈİÆ÷¶¼ÓĞ·´Ïòµü´úÆ÷
-
-		ÒÆ¶¯µü´úÆ÷(move iterator): ÕâĞ©×¨ÓÃµÄµü´úÆ÷²»ÊÇ¿½±´ÆäÖĞµÄÔªËØ£¬¶øÊÇÒÆ¶¯ËüÃÇ
-	*/
-
-	//²åÈëµü´úÆ÷
-	/*
-		²åÈëµü´úÆ÷ÊÇÒ»ÖÖµü´úÆ÷ÊÊÅäÆ÷£¬½ÓÊÜÒ»¸öÈİÆ÷£¬Éú³ÉÒ»¸öµü´úÆ÷
-		ÄÜÊµÏÖÏò¸ø¶¨ÈİÆ÷Ìí¼ÓÔªËØ
-
-		²åÈëÆ÷(²åÈëµü´úÆ÷)ÓĞÈıÖÖÀàĞÍ: ²î±ğÔÚÓÚÔªËØ²åÈëµÄÎ»ÖÃ
-
-		back_inserter:´´½¨Ò»¸öÊ¹ÓÃpush_back()µÄµü´úÆ÷
-		front_inserter:´´½¨Ò»¸öÊ¹ÓÃpush_front()µÄµü´úÆ÷
-		inserter: Õâ¸ö²åÈëÆ÷¼ş½ÓÊÜµÚ¶ş¸ö²ÎÊı£¬Õâ¸ö²ÎÊı±ØĞëÊÇ	**Ò»¸öÖ¸Ïò¸ø¶¨ÈİÆ÷µÄµü´úÆ÷**
-
-
-		²åÈëµü´úÆ÷Ìá¹©ÁË¸üÁé»îµÄ²åÈëÑ¡Ïî£¬¿ÉÒÔÔÚÔËĞĞÊ±Ñ¡Ôñ²»Í¬µÄ²åÈë²ßÂÔ
-		Ö±½Óµ÷ÓÃÈİÆ÷³ÉÔ±º¯Êı¿ÉÄÜĞèÒªÔÚ±àÒëÊ±È·¶¨²åÈëÎ»ÖÃ£¬ÏŞÖÆÁËÒ»Ğ©Áé»îĞÔ(²Ù×÷ÒÀÀµÓÚÈİÆ÷)
-
-	*/
-
-	void inserter_list()
-	{
-		//back_inserter ÔÚÄ¿±êÈİÆ÷Ä©Î²²åÈëÔªËØ
-		//Ê¹ÓÃpush_back½«ÔªËØÌí¼Óµ½Ä¿±êÈİÆ÷µÄÄ©Î²
-
-		std::vector<int> vec = { 1,2,3 };
-		std::back_insert_iterator<std::vector<int>> backInserter(vec);
-		//Ò²¿ÉÒÔÊ¹ÓÃback_inserter ´´½¨Ò»¸ö²åÈëµü´úÆ÷¶ÔÏó auto it = std::back_inserter(vec)
-
-		*backInserter = 4; //½«ÔªËØ4²åÈëµ½vecµÄÄ©Î²
-		++backInserter;
-
-		std::copy(vec.begin(), vec.end(), std::ostream_iterator<int>(std::cout, " "));
-
-
-		//front_inserter ÔÚÄ¿±êÈİÆ÷¿ªÍ·²åÈëÔªËØ
-		//Ê¹ÓÃpush_front ½«ÔªËØÌí¼Óµ½Ä¿±êÈİÆ÷¿ªÍ·
-
-		std::list<int> lst = { 1,2,3 };
-		std::front_insert_iterator<std::list<int>> frontInserter(lst);
-
-		*frontInserter = 4;
-		++frontInserter;
-
-		std::copy(lst.begin(), lst.end(), std::ostream_iterator<int>(std::cout, " "));
-		//ostream_iterator<> Ğ´Êä³öÁ÷
-
-
-		//inserter ÔÚÄ¿±êÈİÆ÷Ö¸¶¨Î»ÖÃ²åÈëÔªËØ
-		//Ê¹ÓÃÖ¸¶¨µÄ²åÈëÎ»ÖÃ£¬Í¨³£ÊÇÄ¿±êÈİÆ÷µÄµü´úÆ÷£¬½«ÔªËØ²åÈëµ½Ö¸¶¨Î»ÖÃ
-
-		std::set<int> mySet = { 1,2,3 };
-		std::inserter(mySet, mySet.begin()) = 4; //½«ÔªËØ4²åÈëµ½Ö¸¶¨Î»ÖÃ
-		/*
-			auto it = std::inserter(mySet,mySet.begin());
-			auto == std::inserter_iterator
-			*it = 4;
-		*/
-
-		std::copy(mySet.begin(), mySet.end(), std::ostream_iterator<int>(std::cout, " ")); //½«mySetÖĞµÄÖµÒÔ±ê×¼Êä³öÁ÷µÄ·½Ê½¿½±´µ½Êä³öÁ÷ÉÏ
-
-	}
-
-	void episode04()
-	{
-		std::vector<int> v = { 1,2,3,4,5,6,7,8,9 };
-		auto it = v.begin() + 3;
-		int val = 0;
-		//Àí½â²åÈëÆ÷µÄ¹¤×÷¹ı³ÌÊÇºÜÖØÒªµÄ
-		auto it1 = std::inserter(v, it); //µÚ¶ş¸ö²ÎÊıÎªÖ¸Ïò¸ø¶¨ÈİÆ÷µÄµü´úÆ÷£¬ÔÚÕâ¸öµü´úÆ÷Ö®Ç°²åÈëÔªËØ
-		*it1 = val; //ÔÚitµü´úÆ÷Ö¸ÏòÈİÆ÷ÔªËØÎ»ÖÃÇ°²åÈëÔªËØ
-
-		//ÉÏÒ»¾äºÍÏÂÃæµÄ´úÂëÍ¬µÈĞ§Á¦
-		it = v.insert(it, val); //µ÷ÓÃÈİÆ÷ÄÚ³ÉÔ±º¯ÊıÊµÏÖ²åÈë
-		++it; //ÒÆ¶¯µü´úÆ÷µ½Ô­À´itµÄÎ»ÖÃ
-
-		/*
-			front_inserterÉú³ÉµÄµü´úÆ÷ºÍinserterÉú³ÉµÄµü´úÆ÷ÍêÈ«²»Ò»Ñù
-			front_inserter×ÜÊÇ²åÈëµ½ÈİÆ÷µÄµÚÒ»¸öÔªËØÖ®Ç°
-		*/
-
-		std::list<int> lst = { 1,2,3,4 };
-		std::list<int> lst2, lst3; //¿Õlist
-		//ÕâÀïÈç¹û¸ø¿ÕlistÖ±½Ó¸³Öµ»á±¨´í
-
-		//µ÷ÓÃalgorithmÍ·ÎÄ¼şÖĞµÄcopyº¯ÊıÊµÏÖÔªËØ¿½±´
-		std::copy(lst.begin(), lst.end(), std::front_inserter(lst2)); //µÚÈı¸ö²ÎÊıÎªÄ¿µÄÎ»ÖÃµü´úÆ÷£¬ÕâÀïÓÃfront_inserterÊµÏÖ·´²å
-		// 4,3,2,1
-
-		std::copy(lst.begin(), lst.end(), std::back_inserter(lst3)); //back_inserter ÊµÏÖÕı²å
-		//1£¬2£¬3£¬4
-
-		/*
-			ÕâĞ©²åÈëµü´úÆ÷Ìá¹©ÁËÒ»ÖÖ·½±ãµÄ·½Ê½£¬Í¨¹ıµü´úÆ÷¶ø²»ÊÇÖ±½Óµ÷ÓÃÈİÆ÷µÄ³ÉÔ±º¯ÊıÀ´²åÈëÔªËØ
-			Ñ¡ÔñÊ¹ÓÃÄÄ¸öÈ¡¾öÓÚÒª²åÈëµÄÎ»ÖÃÒÔ¼°Ï£ÍûÊ¹ÓÃµÄ²åÈë·½·¨
-		*/
-
-
-
-
-	}
-
-	void unique_copy_test()
-	{
-		//std::unique_copy()ÊÇc++±ê×¼¿âÖĞµÄÒ»¸öËã·¨£¬ÓÃÓÚ´ÓÒ»¸ö·¶Î§¸³ÖµÔªËØµ½ÁíÒ»¸öÔªËØ
-		//²¢ÇÒÔÚ¸´ÖÆ¹ı³ÌÖĞÈ¥³ıÏàÁÚµÄÖØ¸´ÔªËØ¡£ËüÍ¨³£ÓÃÓÚ´ÓÒ»¸öÓĞĞò·¶Î§ÖĞ´´½¨Ò»¸ö²»°üº¬
-		//ÖØ¸´ÔªËØµÄĞÂÈİÆ÷
-
-		//Ô­Ê¼ÈİÆ÷
-		std::vector<int> source = { 1,2,3,4,5,6,2,3,4, };
-
-		//Ä¿±êÈİÆ÷£¬ÓÃÓÚ´æ´¢È¥³ıÏàÁÚÖØ¸´ÔªËØºóµÄ½á¹û
-		std::vector<int> destination;
-
-		//ÎªÈİÆ÷ÅÅĞò
-		std::sort(source.begin(), source.end(), [](int& a, int& b) {
-			return a < b;
-			});
-		//unique_copyÒªÇó·¶Î§±ØĞëÊÇÓĞĞòµÄ£¬ÒòÎªËüÖ»ÄÜÈ¥³ıÏàÁÚµÄÖØ¸´ÔªËØ
-
-		//Ê¹ÓÃstd::unique_copy ¸´ÖÆ²¢È¥³ıÏàÁÚÖØ¸´ÔªËØ
-		std::unique_copy(source.begin(), source.end(), std::back_inserter(destination)); //Î²²åµü´úÆ÷
-
-
-		//´òÓ¡½á¹û
-		for (const auto& element : destination)
-		{
-			std::cout << element << " ";
-		}
-	}
-
-	void test01()
-	{
-		std::vector<int> vec = { 1,2,3,4,5,6,7,8,9 };
-
-		std::vector<int> vec2, vec3, vec4;
-
-		std::front_insert_iterator<std::vector<int>> it1 = std::front_inserter(vec2);
-
-		std::back_insert_iterator<std::vector<int>> it2 = std::back_inserter(vec3);
-
-		std::insert_iterator<std::vector<int>> it3 = std::inserter(vec4, vec4.begin());
-		//µÚ¶ş¸ö²ÎÊıÎªÖ¸Ïò°ó¶¨ÈİÆ÷µÄµü´úÆ÷
-
-		//Ê¹ÓÃcopyº¯ÊıÊµÏÖ¶ÔÈİÆ÷ÄÚÔªËØµÄ¿½±´
-		std::copy(vec.begin(), vec.end(), it1);
-		std::copy(vec.begin(), vec.end(), it2);
-		std::copy(vec.begin(), vec.end(), it3);
-	}
-
-
-	/*
-		iostreamµü´úÆ÷
-
-
-		ËäÈ»iostreamÀàĞÍ²»ÊÇÈİÆ÷£¬µ«±ê×¼¿â¶¨ÒåÁË¿ÉÒÔÓÃÓÚÕâĞ©IOÀàĞÍ¶ÔÏóµÄµü´úÆ÷
-
-		istream_iterator ¶ÁÈ¡ÊäÈëÁ÷
-		ostream_iterator ÏòÒ»¸öÊä³öÁ÷Ğ´Êı¾İ
-		
-		ÕâĞ©µü´úÆ÷½«ËüÃÇ¶ÔÓ¦µÄÁ÷µ±×÷Ò»¸öÌØ¶¨ÀàĞÍµÄÔªËØĞòÁĞÀ´´¦Àí
-	*/
-
-	void episode05()
-	{
-		//istream_iterator ²Ù×÷
-		//µ±´´½¨Ò»¸öÁ÷Ê±£¬±ØĞëÖ¸¶¨µü´úÆ÷½«Òª¶ÁĞ´µÄ¶ÔÏóÀàĞÍ
-			//istream_iterator Ê¹ÓÃ >> À´¶ÁÈ¡Á÷
-			//Òò´Ë£¬istream_iterator Òª¶ÁÈ¡µÄÀàĞÍ±ØĞë¶¨ÒåÁËÊäÈëÔËËã·û
-		
-		
-		//´´½¨istream_iterator ¶ÔÏó
-		std::istream_iterator<int> int_it(std::cin); //Ö¸¶¨µü´úÆ÷¶Á¶ÔÏóÀàĞÍ
-		//´Ócin¶ÁÈ¡int
-
-		std::istream_iterator<int> int_eof; //Ä¬ÈÏ³õÊ¼»¯Á÷µü´úÆ÷¿ÉÒÔÓÃ×÷Î²ºóµü´úÆ÷
-
-		std::ifstream in("afile"); //ÎÄ¼şÊäÈëÁ÷
-		std::istream_iterator<std::string> str_it(in); //´Óafile¶ÁÈ¡×Ö·û´®
-
-		//¶ÔÓÚÒ»¸ö°ó¶¨µ½Á÷µÄµü´úÆ÷£¬Ò»µ©Æä¹ØÁªµÄÁ÷Óöµ½ÎÄ¼şÎ²»òIO´íÎó£¬µü´úÆ÷µÄÖµ¾ÍÓëÎ²ºóµü´úÆ÷ÏàµÈ
-
-		std::vector<int> vec;
-		std::istream_iterator<int> in_iter(std::cin); //´Ó±ê×¼ÊäÈëÁ÷¶ÁÈ¡Êı¾İ
-		std::istream_iterator<int> eof; //end of file
-
-		while (in_iter != eof)
-		{
-			vec.push_back(*in_iter++);
-		}
-
-		//ÉÏÃæµÄ³ÌĞò¿ÉÒÔÖØĞ´³ÉÏÂÃæµÄ´úÂë
-		std::istream_iterator<int> in_iter1(std::cin),eof;
-
-		std::vector<int> vec(in_iter,eof); //Ê¹ÓÃµü´úÆ÷½øĞĞ³õÊ¼»¯
-		//´Óµü´úÆ÷·¶Î§¹¹Ôìvec
-
-		//ÔªËØ·¶Î§ÊÇÍ¨¹ı´Ó¹ØÁªµÄÁ÷ÖĞ¶ÁÈ¡Êı¾İ»ñµÃµÄ£¬´ÓÁ÷ÖĞ¶ÁÈ¡µÄÊı¾İ±»ÓÃÀ´¹¹Ôìvec
-
-
-
-		/*
-			Ê¹ÓÃËã·¨À´²Ù×÷Á÷µü´úÆ÷
-			ÓÉÓÚËã·¨Ê¹ÓÃµü´úÆ÷²Ù×÷À´¶ÁÈ¡Êı¾İ£¬¶øÁ÷µü´úÆ÷ÓÖÖÁÉÙÖ§³ÖÄ³Ğ©µü´úÆ÷²Ù×÷£¬Òò´ËÎÒÃÇÖÁÉÙ¿ÉÒÔÓÃÄ³Ğ©Ëã·¨À´²Ù×÷Á÷µü´úÆ÷
-
-		*/
-
-		std::istream_iterator<int> in(std::cin), end;
-		std::cout << std::accumulate((std::istream_iterator<int>)in,end, 0) << std::endl;
-		//Ëã·¨ÓÃµü´úÆ÷À´²Ù×÷Á÷ÖĞÊı¾İ
-		//istream_iteratorÔÊĞíÀÁ¶èÇóÖµ
-		//±ê×¼¿â±£Ö¤ÔÚÎÒÃÇµÚÒ»´Î½âÒıÓÃµü´úÆ÷Ö®Ç°£¬´ÓÁ÷ÖĞ¶ÁÈ¡Êı¾İµÄ²Ù×÷¾ÍÒÑ¾­Íê³ÉÁË
-		//£¨¾ßÌåÀ´Ëµ¾ÍÊÇÖ§³ÖÍÆ³Ù¶ÔÊäÈëÁ÷µÄ¶ÁÈ¡£©
-
-
-
-
-
-
-
-		/*
-			ostream_iteratorÊä³öµü´úÆ÷
-
-			ÎÒÃÇ¿ÉÒÔ¶ÔÈÎÒâ¾ßÓĞÊä³öÔËËã·ûµÄÀàĞÍ¶¨Òåostream_iterator¡£
-			µ±´´½¨Ò»¸öostream_iterator¶ÔÏóÊ±£¬ÎÒÃÇ¿ÉÒÔÌá¹©µÚ¶ş¸ö²ÎÊı
-			µÚ¶ş¸ö²ÎÊı±ØĞëÊÇÒ»¸öC·ç¸ñµÄ×Ö·û´®(¼´Ò»¸ö×Ö·û´®×ÖÃæ³£Á¿»òÕßÒ»¸öÖ¸ÏòÒÔ¿Õ×Ö·û½áÎ²µÄ×Ö·ûÊı×éµÄÖ¸Õë)
-			ostream_iterator±ØĞë°ó¶¨µ½Ò»¸öÖ¸¶¨µÄÁ÷£¬²»ÔÊĞí¿ÕµÄ»ò±íÊ¾Î²ºóÎ»ÖÃµÄostream_iterator
-
-		*/
-
-		//ÎÒÃÇ¿ÉÒÔÓÃostream_iteratorÀ´Êä³öÖµµÄĞòÁĞ
-		std::ostream_iterator<int> out_iter(std::cout," ");
-		
-		for (auto& e : vec)
-		{
-			*out_iter++ = e; //ÀûÓÃÊä³öµü´úÆ÷(ostream_iterator)½«eĞ´Èëµ½Êä³öÁ÷ÖĞ
-		}
-
-		//µ±ÎÒÃÇÏòout_iter¸³ÖµµÄÊ±ºò£¬¿ÉÒÔºöÂÔ½âÒıÓÃºÍµİÔöÔËËã
-		//out_iter = e;
-		//ÔËËã·û* ºÍ++Êµ¼ÊÉÏ¶Ôostream_iterator¶ÔÏó²»×öÈÎºÎÊÂÇé
-		//Òò´ËºöÂÔËüÃÇ¶ÔÎÒÃÇµÄ³ÌĞòÃ»ÓĞÈÎºÎÓ°Ïì
-
-		//¿ÉÒÔÍ¨¹ıµ÷ÓÃcopyÀ´´òÓ¡vecÖĞµÄÔªËØ
-		std::copy(vec.begin(),vec.end(),out_iter); //½«vecÖĞµÄÔªËØ¿½±´µ½Êä³öÁ÷µü´úÆ÷
-
-
-
-
-	}
-
-	int test02()
-	{
-		//Ê¹ÓÃÁ÷µü´úÆ÷¶ÁÈ¡Ò»¸öÎÄ±¾ÎÄ¼ş£¬´æÈëÒ»¸övectorÖĞµÄstringÀï
-		
-		//´ò¿ªÎÄ±¾ÎÄ¼ş
-		std::ifstream file("C:\\Users\\wsxl2\\source\\repos\\Generic Algorithm_next\\example.txt");
-		
-		//¼ì²éÎÄ¼şÊÇ·ñ³É¹¦´ò¿ª
-		if (!file.is_open())
-		{
-			std::cerr << "Error opening the file." << std::endl;
-			return 1; //·µ»Ø´íÎóÂë
-		}
-
-		//Ê¹ÓÃstd::istream_iterator ´ÓÎÄ¼şÖĞ¶ÁÈ¡×Ö·û´®Ö±µ½ÎÄ¼şÄ©Î²
-		std::istream_iterator<std::string> fileIterator(file); //ÎÄ±¾ÎÄ¼şÊäÈëÁ÷
-		std::istream_iterator<std::string> endIterator; //eof
-		
-		//Ê¹ÓÃµü´úÆ÷½«ÎÄ¼şÖĞµÄ×Ö·û´®´æ´¢µ½vectorÖĞ
-		std::vector<std::string> lines(fileIterator,endIterator); 
-
-		//´òÓ¡vectorÖĞµÄ×Ö·û´®
-		std::cout << "Contents of vector: " << std::endl;
-		
-		for (const auto& line : lines)
-		{
-			std::cout << line << std::endl;
-		}
-
-		file.close();
-		return 0;
-
-	}
-
-	void test03()
-	{
-		
-	}
-
-
-
-
-
-
-
-	/*
-		·´Ïòµü´úÆ÷
-
-	*/
-
-
-
+public:
+    GradientButton(const QString &text, QWidget *parent = nullptr) : QPushButton(text, parent){}
+
+protected:
+    void paintEvent(QPaintEvent *event) override
+    {
+        Q_UNUSED(event);
+
+        QPainter painter(this);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setOpacity(1); //è®¾ç½®é€æ˜åº¦
+
+        QLinearGradient gradient(0,0,width(),height());
+        gradient.setColorAt(0,QColor(37,96,26));
+        gradient.setColorAt(1,QColor(184,229,186));
+
+        painter.fillRect(rect(),gradient);
+        painter.drawText(rect(),Qt::AlignCenter,text());
+    }
+};
+
+
+int main(int argc, char *argv[])
+{
+    QApplication a(argc, argv);
+
+    Widget w;
+
+    //åˆ›å»ºæ§ä»¶
+    QLabel *nameLabel = new QLabel("å§“å(N)");
+    //å¿«æ·é”®è®¾ç½®
+    QLineEdit *nameLineEdit = new QLineEdit;
+    QShortcut *shortcut = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_N),&w);
+    //å°†å¿«æ·é”®ä¸ä¿¡å·å…³è”
+    QObject::connect(shortcut,&QShortcut::activated,nameLineEdit,[nameLineEdit](){
+        nameLineEdit->setFocus();
+    });
+
+    QLabel *numLabel = new QLabel("å­¦å·:");
+    QLabel *num = new QLabel("52240209");
+
+    QLabel *ageLabel = new QLabel("å¹´é¾„(A)");
+    QSpinBox *ageSpinBox = new QSpinBox;
+    ageSpinBox->setRange(15,25);
+    //å¿«æ·é”®è®¾ç½®
+    QShortcut *shortcut1 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_A),&w);
+    //å°†å¿«æ·é”®ä¸ä¿¡å·å…³è”
+    QObject::connect(shortcut1,&QShortcut::activated,ageSpinBox,[ageSpinBox](){
+        ageSpinBox->setFocus();
+    });
+
+    QLabel *acadeLabel = new QLabel("æ‰€å±é™¢ç³»");
+    QComboBox *acadeComboBox = new QComboBox;
+    acadeComboBox->addItem("ä¿¡æ¯å·¥ç¨‹å­¦é™¢");
+    acadeComboBox->addItem("æœºæ¢°å·¥ç¨‹å­¦é™¢");
+    acadeComboBox->addItem("ç”µå™¨å·¥ç¨‹å­¦é™¢");
+
+    QGroupBox *genderGroupBox = new QGroupBox("æ€§åˆ«");
+    QRadioButton *maleRadioButton = new QRadioButton("ç”·");
+    QRadioButton *femaleRadioButton = new QRadioButton("å¥³");
+
+    QGroupBox *curriculumGroupBox = new QGroupBox("é€‰ä¿®è¯¾ç¨‹");
+    QCheckBox *musicCheckBox = new QCheckBox("éŸ³ä¹é‰´èµ");
+    QCheckBox *yogaCheckBox = new QCheckBox("ç‘œä¼½å¥èº«");
+
+    GradientButton *saveButton = new GradientButton("ä¿å­˜");
+    GradientButton *cancelButton = new GradientButton("å–æ¶ˆ");
+    GradientButton *clearButton = new GradientButton("æ¸…ç©º");
+
+    QObject::connect(saveButton,&QPushButton::clicked,&on_saveButton_clicked);
+    QObject::connect(cancelButton,&QPushButton::clicked,[&w](){
+        on_cancelButton_clicked(&w);
+    });
+    QObject::connect(clearButton,&QPushButton::clicked,[nameLineEdit](){
+        on_clearButton_clicked(nameLineEdit);
+    });
+
+    //è®¾ç½®æ§ä»¶çš„Tabé¡ºåº
+    QWidget::setTabOrder(nameLineEdit,ageSpinBox);
+    QWidget::setTabOrder(ageSpinBox,acadeComboBox);
+    QWidget::setTabOrder(acadeComboBox,maleRadioButton);
+    QWidget::setTabOrder(maleRadioButton,femaleRadioButton);
+    QWidget::setTabOrder(femaleRadioButton,musicCheckBox);
+    QWidget::setTabOrder(musicCheckBox,yogaCheckBox);
+    QWidget::setTabOrder(yogaCheckBox,saveButton);
+    QWidget::setTabOrder(saveButton,cancelButton);
+    QWidget::setTabOrder(cancelButton,clearButton);
+
+
+    /*--------------------------------------------------------------------------------------*/
+
+    //æ§ä»¶å¸ƒå±€
+    QVBoxLayout *mainLayout = new QVBoxLayout(&w);
+
+    QHBoxLayout *nameLayout = new QHBoxLayout;
+    nameLayout->addWidget(nameLabel);
+    nameLayout->addWidget(nameLineEdit);
+
+    QHBoxLayout *parallelLayout1 = new QHBoxLayout;
+
+    QHBoxLayout *numLayout = new QHBoxLayout;
+    numLayout->addWidget(numLabel);
+    numLayout->addWidget(num);
+
+    QHBoxLayout *ageLayout = new QHBoxLayout;
+    ageLayout->addWidget(ageLabel);
+    ageLayout->addWidget(ageSpinBox);
+
+    parallelLayout1->addLayout(numLayout);
+    parallelLayout1->addLayout(ageLayout);
+
+    QHBoxLayout *acadeLayout = new QHBoxLayout;
+    acadeLayout->addWidget(acadeLabel);
+    acadeLayout->addWidget(acadeComboBox);
+
+    QHBoxLayout *parallelLayout2 = new QHBoxLayout;
+
+    QVBoxLayout *genderLayout = new QVBoxLayout;
+    genderLayout->addWidget(maleRadioButton);
+    genderLayout->addWidget(femaleRadioButton);
+    genderGroupBox->setLayout(genderLayout);
+    genderGroupBox->setMinimumSize(150,100);
+    genderGroupBox->setMaximumSize(200,150);
+
+    QVBoxLayout *curriculumLayout = new QVBoxLayout;
+    curriculumLayout->addWidget(musicCheckBox);
+    curriculumLayout->addWidget(yogaCheckBox);
+    curriculumGroupBox->setLayout(curriculumLayout);
+    curriculumGroupBox->setMinimumSize(100,75);
+    curriculumGroupBox->setMaximumSize(200,150);
+
+    parallelLayout2->addWidget(genderGroupBox);
+    //åˆ›å»ºä¸€ä¸ªå¼¹ç°§
+    QSpacerItem *spacer = new QSpacerItem(20,10,QSizePolicy::Minimum,QSizePolicy::Minimum);
+    parallelLayout2->addItem(spacer);
+    parallelLayout2->addWidget(curriculumGroupBox);
+    //è®¾ç½®å¸ƒå±€å›ºå®šå¤§å°
+    parallelLayout2->setSizeConstraint(QLayout::SetFixedSize);
+
+    QHBoxLayout *buttonLayout = new QHBoxLayout;
+    buttonLayout->addWidget(saveButton);
+    buttonLayout->addWidget(cancelButton);
+    buttonLayout->addWidget(clearButton);
+
+    mainLayout->addLayout(nameLayout);
+    mainLayout->addLayout(parallelLayout1);
+    mainLayout->addLayout(acadeLayout);
+    mainLayout->addLayout(parallelLayout2);
+    mainLayout->addLayout(buttonLayout);
+
+    /*--------------------------------------------------------------------------------------*/
+
+    //æ˜¾ç¤ºæ§ä»¶
+    w.resize(400,300);
+    w.show();
+    return a.exec();
 }
 
-#endif
-
-int main()
+void on_saveButton_clicked()
 {
+    QMessageBox::information(nullptr,"æç¤º","è‚–æµªä¿å­˜æˆåŠŸ!");
+}
 
-	//Lambda_expression::episode01();
+void on_cancelButton_clicked(QWidget* widget)
+{
+    widget->close();
+}
 
-
-	//test();
-	std::string s = "hello,world!";
-	std::vector<int> vec = { 1,3,5,7,9,11,13,15 };
-	Lambda_expression::inserter_list();
-
-	return EXIT_SUCCESS;
+void on_clearButton_clicked(QLineEdit* l)
+{
+    l->clear();
 }
