@@ -28,7 +28,7 @@ int main(void)
     n_columns = read_column_numbers(columns,MAX_COLS);
     
     // 读取、处理和打印剩余行。
-    while (gets(input) != NULL)
+    while (fgets(input,sizeof(input),stdin) != NULL)
     {
         printf("Original input: %s\n",input);
         rearrange(output,input,n_columns,columns);
@@ -77,16 +77,16 @@ void rearrange(char *output, char const *input, int n_columns, int const columns
         int nchar = columns[col + 1] - columns[col] + 1;
         
         // 如果输入行结束或输出行数组已满，就结束任务。
-        if (columns[col] >= len || output_col = MAX_INPUT - 1)
+        if (columns[col] >= len || output_col == MAX_INPUT - 1)
             break;
         
         // 如果输出行空间不够，只复制可以容纳的数据
-        if (output_col + nchars > MAX_INPUT - 1)
-            nchars = MAX_INPUT - output_col - 1;
+        if (output_col + nchar > MAX_INPUT - 1)
+            nchar = MAX_INPUT - output_col - 1;
         
         // 复制相关的数据
-        strncpy(output + output_col,input + columns[col],nchars);
-        output_col += nchars;
+        strncpy(output + output_col,input + columns[col],nchar);
+        output_col += nchar;
     }
     output[output_col] = '\0';
 }
