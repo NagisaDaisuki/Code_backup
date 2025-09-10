@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 int main(void) {
   int test_num;
@@ -28,5 +29,8 @@ int main(void) {
   printf("fibonacci numbers using iteration.\n");
   printf("Fibonacci(%d) = %ld\n", test_num, result2);
 
+  sleep(1);
+
+  testlist();
   return EXIT_SUCCESS;
 }

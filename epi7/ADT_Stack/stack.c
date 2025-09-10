@@ -11,7 +11,7 @@ struct StackType {
   int capacity;
 };
 
-// 创建APT栈
+// 创建ADT栈
 Stack *createStack(int capacity) {
   Stack *s = (Stack *)malloc(sizeof(struct StackType));
   if (s == NULL) {
