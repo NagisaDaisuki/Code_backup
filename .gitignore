@@ -1,2 +1,8 @@
+# ignore files and folders created by compiler
 ./epi7/bin2ascii
 ./epi7/even_parity
+
+
+# ignore all the executable folders
+./epi9_executable/
+
