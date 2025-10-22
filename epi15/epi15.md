@@ -93,8 +93,7 @@ int main() {
 #include <unistd.h> // for sleep
 
 int main() {
-    // 1. 没有 \n，数据进入缓冲区，但不会自动刷新
-    printf("等待 5 秒，你可能看不到我...");
+    printf("等待 5 秒，你应该能看到我...\n");
     
     // 2. 暂停执行
     sleep(5); 
@@ -142,8 +141,296 @@ int main() {
 - 优点：1.精确性：文件中的字节数与程序处理的字节数总是精准匹配。适用于存储图片、音频、结构体、加密数据等。2.性能：由于没有翻译开销，I/O操作通常更快。
 - 缺点：**缺乏可移植性**。如果直接将C结构体写入二进制文件，文件将依赖于机器的字节序(Endianness)和数据类型大小。
 
+#### 三、编程实现上的区别
+
+在C语言中，你通过`fopen()`函数的第二个参数（模式字符串）来指定使用哪种流模式：
+
+|模式|描述|
+|:--|:--|
+|`"r"`/`"w"`/`"a"`|文本模式(默认)|
+|`"rb"`/`"wb"`/`"ab"`|二进制模式(加`b`)|
+
 ### 15.4.2 文件
+
+`stdio.h`所包含的声明之一就是`FILE`结构。`FILE`是一个数据结构，用于访问一个流。如果同时激活几个流每个流都有一个相应的`FILE`与它关联。
+
+- 对于每个ANSI C程序，运行时系统必须提供至少三个流：**标准输入(standard input)**、**标准输出(standard output)**和**标准错误(standard error)**。名字分别为`stdin`、`stdout`、`stderr`。这三个流都是指向`FILE`结构的指针。
+
+> 标准输入是缺省输入来源，标准输出是缺省输出设置，标准错误是缺省错误设置。通常标准输入为键盘设置，标准输出为终端或屏幕。
+> 可以将标准输入和标准输出设置为其他设备。
 
 ### 15.4.3 标准I/O常量
 
+`EOF`是许多函数的返回值，提示达到了文件尾。**EOF所选择的实际值比一个字符多几位，这是为了避免二进制被错误地解释为EOF。**
+
+- 输入函数返回`int`类型：`getchar()`和`fgetc()`等函数被设计为返回`int`(32位或16位)，而不是`char`(8位)。
+- EOF的值：一般为负整数`-1`。
+
+|状态|返回值|位宽利用|
+|:---:|:---:|:---:|
+|成功读取有效字符|返回值是一个0到255之间的整数|仅使用了`int`的低8位来存储字符代码，其余位是0。|
+|遇到文件结束(EOF)|返回值是一个负整数(-1)|`int`的所有位都被设置成-1的二进制表示(所有32位都是1)|
+
+> 一个程序至少可以打开**FOPEN_MAX**个文件，至少是8。有一个常量**FILENAME_MAX**提示字符数组应该多大以便容纳编译器所支持的最长合法文件名。
+
 ## 15.5 流I/O总览
+
+对于文件流或设备流
+
+1. 使用`FILE*`将处于活动状态的文件选择使用。
+2. 流通过调用`fopen`函数打开。为了打开一个流必须指定要访问的文件或设备以及他们的访问方式。`fopen`和操作系统验证文件或设备确实存在并初始化FILE结构。
+3. 对文件或设备读取写入。
+4. 最后调用`fclose`函数关闭流。防止被再次访问，保证任何存储于缓冲区的数据被正确地写到文件中，并且释放FILE结构使它可以用于另外的文件。
+
+> 标准流不需要打开或关闭。
+
+**执行字符、文本行和二进制I/O的函数**
+
+|数据类型|输入|输出|描述|
+|:---|:---|:---|:---|
+|字符|getchar|putchar|读取(写入)单个字符|
+|文本行|gets/scanf|puts/printf|文本行未格式化的输入(输出)/格式化的输入(输出)|
+|二进制数据|fread|fwrite|读取(写入)二进制数据|
+
+> 带f前缀的输入输出函数可以用于所有流。
+
+## 15.6 打开流
+
+`fopen`函数用于创建并打开一个新流。
+
+~~~C
+FILE *fopen(char const *name, char const *mode);
+~~~
+
+`mode`参数上面编程实现给出
+> 在mode 中添加 `a+`表示该文件打开用于更新，并且流既允许读也允许写。
+> 但是在向流写入数据前必须调用其中一个文件定位函数(`fseek`、`fsetpos`、`rewind`)。
+> 在写后又想读取数据首先必须调用`fflush`函数或文件定位函数之一。
+
+应该始终检查`fopen`函数的返回值！如果函数失败，它会返回一个NULL值。
+
+~~~C
+FILE *input;
+input = fopen("data3", "r"); // 文本只读
+if (input == NULL)
+{
+  perror("failed to open file data3, Quitting...");
+  exit(EXIT_FAILURE);
+}
+// 在终端报错类似：data3: No such file or directory
+~~~
+
+`freopen`函数用于打开（或重新打开）一个特定的文件流。原型如下：
+
+~~~C
+FILE* freopen(char const *filename, char const *mode, FILE *stream);
+~~~
+
+最大的作用是改变流的输入输出
+> `freopen`函数在执行成功时，它返回的指针和传入的第三个参数`stream`是同一个指针，即它们都指向同一个`FILE`结构体。
+
+~~~C
+#include <stdio.h>
+#include <stdlib.h> // 用于 EXIT_FAILURE
+
+int main() {
+    // 1. 初始状态：printf 输出到终端
+    printf("--- 程序开始 ---\n");
+    printf("这条信息应该显示在终端上。\n");
+
+    // =======================================================
+    // 2. 使用 freopen 重定向标准输出 (stdout)
+    //    参数: 
+    //      "log.txt": 新的文件名
+    //      "w": 写入模式 (会覆盖文件原有内容)
+    //      stdout: 要重定向的目标流
+    // =======================================================
+    FILE *original_stdout = freopen("log.txt", "w", stdout);
+
+    // 检查重定向是否成功
+    if (original_stdout == NULL) {
+        // 如果重定向失败，通常是文件路径问题
+        perror("freopen 失败");
+        return EXIT_FAILURE;
+    }
+
+    // 3. 重定向后的状态：printf 输出到 log.txt 文件
+    printf("这条信息不会显示在终端，而是写入 log.txt。\n");
+    printf("freopen 成功地将标准输出改变了方向。\n");
+    printf("--- 程序结束 ---\n");
+
+    // 4. 关闭文件流并返回
+    // freopen 已经关闭了旧的 stdout（终端），并打开了新的文件。
+    // 程序结束时会自动关闭 log.txt，但明确关闭是好习惯
+    if (fclose(stdout) != 0) {
+        perror("关闭 stdout 失败");
+    }
+    
+    // 注意：程序不会输出任何成功信息到终端，因为它被重定向了
+    return 0;
+}
+~~~
+
+## 15.7 关闭流
+
+使用`fclose`关闭流
+
+~~~C
+int fclose(FILE *f);
+~~~
+
+`fclose`函数在文件关闭前刷新缓冲区。执行成功返回0值，否则返回EOF。
+> 是否应该对fclose(或其他操作)进行错误检查？
+>>
+>> 1. 如果操作成功应该执行什么？  
+>> 2. 如果操作失败应该执行什么？
+>>
+>>> 如果这两个答案是不同的，应该进行错误检查；如果是相同的，跳过错误检查才是合理的。
+
+## 15.8 字符I/O
+
+字符输入
+
+~~~C
+int fgetc(FILE *stream);
+int getc(FILE *stream);
+int getchar(void);
+~~~
+
+字符输出
+
+~~~C
+int fputc(int character,FILE* stream);
+int putc(int character,FILE* stream);
+int putchar(int character);
+~~~
+
+### 15.8.1 字符I/O宏
+
+除了`fgetc`和`fputc`其他都是`#define`指令定义的宏，两种实现为了不同的场景，但是实际两种操作相差甚微。
+
+### 15.8.2 撤销字符I/O
+
+在流读取时总有一个不想读取的字符，但使用流逐个读取没有条件判断一定会读到一个不满足的字符，为了不丢弃这个字符，使用`ungetc`函数将这个字符从参数中推回stream中。
+
+> `ungetc`函数主要的应用场景是**超前扫描**或**令牌解析**
+
+读取一个整数，直到遇到非数字或EOF
+
+~~~C
+#include <stdio.h>
+#include <ctype.h> // 用于 isdigit()
+
+// 函数：从标准输入读取一个整数
+int read_integer(FILE *stream) {
+    int ch;
+    int value = 0;
+
+    // 1. 跳过开始的空白字符
+    do {
+        ch = fgetc(stream);
+    } while (isspace(ch));
+
+    // 2. 检查第一个非空白字符是否是数字
+    if (!isdigit(ch)) {
+        // 如果第一个字符不是数字，就把它放回流中
+        if (ch != EOF) {
+            ungetc(ch, stream);
+        }
+        return 0; // 或者返回一个错误代码
+    }
+
+    // 3. 读取数字部分
+    while (isdigit(ch)) {
+        value = value * 10 + (ch - '0');
+        ch = fgetc(stream); // 超前读取下一个字符
+    }
+
+    // 4. 【核心步骤】
+    // 循环停止是因为 ch 遇到了第一个非数字字符（或者 EOF）。
+    // 这个非数字字符（例如一个字母 'A'）不属于当前的整数，它属于流的下一个部分。
+    if (ch != EOF) {
+        ungetc(ch, stream); // 将这个超前读取的字符放回流中
+    }
+    
+    return value;
+}
+
+int main() {
+    int num1, num2;
+    
+    printf("请输入数据 (例如: 123ABC456)\n");
+    
+    // 假设用户输入: 123ABC456\n
+
+    // 第一次调用：读取 123
+    num1 = read_integer(stdin); 
+    printf("读取到第一个整数: %d\n", num1); 
+    // 此时字符 'A' 被 read_integer 读走后又放回了 stdin。
+
+    // 第二次调用：读取下一个字符，它将是 'A'
+    printf("下一个字符是: %c\n", fgetc(stdin)); 
+    
+    // 第三次调用：读取 456
+    // read_integer 会消耗 'B', 'C'，直到 456
+    // num2 = read_integer(stdin); // 错误：会消耗 'B', 'C'
+    
+    printf("流中剩余字符:\n");
+    // 清空并打印剩余部分，以验证 ungetc 后的字符 'A' 确实被读取了
+    int ch;
+    while ((ch = getchar()) != EOF) {
+        putchar(ch);
+    }
+    
+    return 0;
+}
+~~~
+
+> 退回字符和流的当前位置有关，如果使用`fseek`,`fsetpos`或`rewind`函数改变了流的位置，所有退回的字符都要被丢弃。
+>
+## 15.9 未格式化的行I/O
+
+行I/O可以使用两种方式执行————未格式化的和格式化的。这两种形式都用于操作字符串。
+
+~~~C
+char *fgets(char* buffer, int buffer_size, FILE *stream);
+char *gets(char *buffer);
+
+int fputs(char const *buffer, FILE* stream);
+int puts(char const *buffer);
+~~~
+
+`fgets`从指定的stream读取字符并把它们复制到buffer中。在读取到换行符或缓冲区内存储的字符达到`buffer_size - 1`时停止读取。
+
+> gets在C99后不推荐使用，C11后已经完全抛弃！puts会自动在尾部添加换行符。fputs不会添加换行符。
+
+常见错误
+
+~~~C
+#include <stdio.h>
+
+int main() {
+    char data[5];
+
+    // 错误操作：数组只有5个字节，但写入了6个字符，没有留空间给 '\0'
+    // 实际上是写入了 'H', 'e', 'l', 'l', 'o'，'\0' 溢出到了 data 之外
+    // 但在这个例子中，我们假设用 memcpy 或其它方式精确地填满 data，没有 \0
+    data[0] = 'A';
+    data[1] = 'B';
+    data[2] = 'C';
+    data[3] = 'D';
+    data[4] = 'E'; // <--- 数组已满，没有空终止符
+
+    printf("尝试写入一个非终止字符串...\n");
+
+    // fputs 将会从 data[0] 开始一直读到内存中找到 \0 为止
+    // 这将是 UB！
+    fputs(data, stdout); 
+
+    printf("\n程序可能崩溃，或者输出了乱码。\n");
+
+    return 0;
+}
+~~~
+
+>
