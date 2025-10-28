@@ -402,7 +402,7 @@ int puts(char const *buffer);
 
 `fgets`从指定的stream读取字符并把它们复制到buffer中。在读取到换行符或缓冲区内存储的字符达到`buffer_size - 1`时停止读取。
 
-> gets在C99后不推荐使用，C11后已经完全抛弃！puts会自动在尾部添加换行符。fputs不会添加换行符。
+> gets在C99后不推荐使用，C11后已经完全抛弃！在任何情况下`fgets`都会在末尾添加NUL字节表示字符串结束；puts会自动在尾部添加换行符；fputs不会添加换行符。
 
 常见错误
 
@@ -433,4 +433,49 @@ int main() {
 }
 ~~~
 
->
+> `fgets`第二个参数虽然能指定传入的元素个数，但是如果参数过大溢出它的缓冲区，`fgets`不会引起错误。
+
+一个例子
+
+~~~C
+/*
+  把标准输入读取的文本行逐行复制到标准输出。
+*/
+#include <stdio.h>
+
+#define MAX_LINE_LENGTH 1024
+
+void copylines(FILE *input, FILE *output)
+{
+  char buffer[MAX_LINE_LENGTH];
+  
+  while( fgets(buffer, MAX_LINE_LENGTH, input) != NULL)
+    fputs(buffer, output);
+}
+~~~
+
+## 15.10 格式化的行I/O
+
+- “格式化的行I/O”这个名字从某种意义上并不准确，因为 `scanf` 和 `printf` 函数家族并不仅限于单行。它们也可以在行的一部分或多行上执行I/O操作。
+
+### 15.10.1 scanf家族
+
+~~~C
+int fscanf(FILE *stream, char const *format, ...);
+int scanf(char const *format, ...);
+int sscanf(char const *string, char const *format, ...);
+~~~
+
+***函数无法验证对应的指针参数输入是否是对应格式代码的正确类型。函数会假定它们是正确的，于是继续执行并使用它们。***
+
+### 15.10.2 scanf格式代码
+
+- **空白字符**————与输入中的零个或多个空白字符相匹配，在处理过程中将被忽略。
+- **格式代码**————它们指定函数如何解释接下来的输入字符。
+- **其他字符**————当任何其他字符出现在格式字符串时，下一个输入字符必须与它匹配。如果匹配，该输入字符随后被丢弃；如果不匹配，函数就不再读取直接返回。
+
+#### 格式代码格式
+
+- 格式代码都是以一个百分号开头，后面可以是
+  - 一个可选的星号
+  - 一个可选的宽度
