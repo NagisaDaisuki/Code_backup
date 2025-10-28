@@ -477,5 +477,36 @@ int sscanf(char const *string, char const *format, ...);
 #### 格式代码格式
 
 - 格式代码都是以一个百分号开头，后面可以是
-  - 一个可选的星号
+  - 一个可选的星号（赋值抑制符）
   - 一个可选的宽度
+  - 一个可选的限定符
+  - 格式代码
+
+- 可选的星号具体使用方法
+假输入流中有数据：`Item_A: 100, Item_B: 200`
+
+~~~C
+int val_b;
+// 使用 %*s 跳过 "Item_A:"
+// 使用 %*d 跳过 100
+// 使用 %*c 跳过 逗号和空格
+// Item_B: 选项被匹配后丢弃
+// 只读取Item_B 的值
+scanf("%*s %*d, Item_B: %d",&val_b);
+
+// 结果：val_b 将被赋值为 200，流中的 "Item_A: 100, "部分被跳过
+~~~
+
+#### scanf限定符
+
+| 限定符 | 作用 (用于指定参数大小) | 适用的类型码 | 对应的 C 类型 |
+| :---: | :--- | :--- | :--- |
+| **`h`** | 读取短整数（Half word size） | `d`, `i`, `u`, `o`, `x`, `n` | `short int`, `unsigned short int` |
+| **`hh`** | 读取字符大小的整数 | `d`, `i`, `u`, `o`, `x`, `n` | `signed char`, `unsigned char` |
+| **`l`** | 读取长整数 | `d`, `i`, `u`, `o`, `x`, `n` | `long int`, `unsigned long int` |
+| **`ll`** | 读取超长整数 | `d`, `i`, `u`, `o`, `x`, `n` | `long long int`, `unsigned long long int` |
+| **`l`** | 读取双精度浮点数 | `f`, `e`, `g`, `a` | `double` (注意：`%f` 读取 `float`) |
+| **`L`** | 读取超长双精度浮点数 | `f`, `e`, `g`, `a` | `long double` |
+| **`z`** | 读取 `size_t` 类型（无符号） | `d`, `i`, `u`, `o`, `x`, `n` | `size_t` |
+| **`j`** | 读取最大宽度整数 | `d`, `i`, `u`, `o`, `x`, `n` | `intmax_t`, `uintmax_t` |
+| **`t`** | 读取指针差值类型 | `d`, `i`, `u`, `o`, `x`, `n` | `ptrdiff_t` |
