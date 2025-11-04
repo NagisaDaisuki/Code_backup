@@ -510,3 +510,681 @@ scanf("%*s %*d, Item_B: %d",&val_b);
 | **`z`** | 读取 `size_t` 类型（无符号） | `d`, `i`, `u`, `o`, `x`, `n` | `size_t` |
 | **`j`** | 读取最大宽度整数 | `d`, `i`, `u`, `o`, `x`, `n` | `intmax_t`, `uintmax_t` |
 | **`t`** | 读取指针差值类型 | `d`, `i`, `u`, `o`, `x`, `n` | `ptrdiff_t` |
+
+一个不能总是正确接收参数的`fscanf()`
+
+~~~C
+  int a, b, c;
+  a = b = c = 0;
+  FILE *f = (FILE *)fopen("./test.txt", "r+");
+  FILE *f1 = (FILE *)fopen("./testout.txt", "r+");
+  if (f == NULL || f1 == NULL) {
+    perror("Failed to read from stream test.txt.\n");
+    return EXIT_FAILURE;
+  }
+
+  if (fscanf(f, "%d %d", &a, &b) ==
+      2) { // 这里如果接收的不是两个整型变量就会导致循环终止，且fscanf跳过空白字符，
+           // 所以它没有办法验证这两个值是位于同一行还是分属于两个不同的输入行
+    fprintf(stdout, "Two number i got from stream f to stdout is %d - %d\n", a,
+            b);
+  }
+
+  // 重置文件指针到文件开头
+  rewind(f);
+
+  int nfield = fscanf(f, "%4d %4d %4d", &a, &b, &c);
+  if (nfield == 2)
+    fprintf(f1, "Two number i got from stream f to f1 is %d - %d", a, b);
+  else if (nfield == 3)
+    fprintf(f1, "Three number i got from stream f to f1 is %d - %d - %d", a, b,
+            c);
+
+  fclose(f1);
+  fclose(f); 
+~~~
+
+一个更为可靠的方法读取这种类型的`fscanf()`
+
+~~~C
+#include <stdio.h>
+
+#define BUFFER_SIZE 100
+
+void function(FILE *input)
+{
+  int a, b, c, d, e;
+  char buffer[BUFFER_SIZE];
+  
+  while (fgets(buffer, BUFFER_SIZE, input) != NULL){
+    if (sscanf(buffer,"%d %d %d %d %d", &a, &b, &c, &d, &e) != 4)
+    {
+      fprintf(stderr,"Bad input skipped: %s", buffer);
+      continue;
+    }
+  }
+  // 处理这组输入
+}
+~~~
+
+### 15.10.3 printf家族
+
+~~~C
+int fprintf(FILE *stream, char const *format, ...);
+int printf(char const *format, ...);
+int sprintf(char *buffer, char const *format, ...);
+~~~
+
+> `sprintf()`被认为是有缺陷的(不安全的)，主要因为它存在固有的缓冲区溢出(Buffer Overflow)风险。
+>
+> 当 buffer被设置为一个固定大小的缓冲区时会有可能超出限制，且无法阻止其**继续覆盖相邻的内存**。
+>> C99 标准引入了 `snprintf` 解决`sprintf`的安全问题。
+
+~~~C
+int snprintf(char *str, size_t size, const char *format, ...);
+~~~
+
+### 15.10.4 printf 格式代码
+
+**`printf`家族格式代码和`scanf`格式代码类似**
+
+几个使用`printf`格式代码的例子
+
+1. 用`printf`格式字符串
+
+|格式代码|转换后的字符串|||
+|:---:|:---:|:---:|:---:|
+|%s|A|ABC|ABCDEFGH|
+|%5s|[][][][]A|[][]ABC|ABCDEFGH|
+|%.5s|A|ABC|ABCDE|
+|%5.5s|[][][][]A|[][]ABC|ABCDE|
+|%-5s|A[][][][]|ABC[][]|ABCDEFGH|
+
+> `%.5s` 中的`.5`是限制精度(限制字符数)，`%.5d`中的`.5`是限制宽度的，而`%5d`是限制精度(限制数字位数)。
+
+2. 用`printf`格式化整数
+
+|格式代码|转换后的数值||||
+|:---:|:---:|:---:|:---:|:---:|
+|%d|1|-12|12345|123456789|
+|%6d|[][][][][]1|[][][]-12|[]12345|123456789|
+|%.4d|0001|-0012|12345|123456789|
+|%6.4d|[][]0001|[]-0012|[]12345|123456789|
+|%-4d|1[][][][]|-12[]|12345|123456789|
+|%04d|0001|-012|12345|123456789|
+|%+d|+1|-12|+12345|+123456789|
+
+3. 用`printf`格式化浮点数
+
+|格式代码|转换后的数值||||
+|:---:|:---:|:---:|:---:|:---:|
+||1|.01|.00012345|12345.6789|
+|%f|1.000000|0.010000|0.000123|12345.678900|
+|%10.2f|[][][][][][]1.00|[][][][][][]0.01|[][][][][][]0.00|[][]12345.67|
+|%e|1.000000e+00|1.000000e-02|1.234500e-04|1.234568e+04|
+|%.4e|1.0000e+00|1.0000e-02|1.2345e-04|1.2346e+04|
+|%g|1|0.01|0.00012345|12345.7|
+
+4. 用`printf`格式化大浮点值
+
+|格式代码|转换后的数值|
+|:---:|:---:|
+||6.023e23|
+|%f|6.02299999999999975882752.000000|
+|%10.2f|6.02299999999999975882752.000000|
+|%e|6.023000e+23|
+|%.4e|6.0230e+23|
+|%g|6.023e+23|
+
+## 15.11 二进制I/O
+
+- 把数据写到文件效率最高的方法是用二进制形式写入。二进制输出**避免了在数值转换为字符串过程中所涉及的开销和精度损失**。但二进制数据并非人眼所能阅读，所以这个技巧只有**当数据将被另一个程序按顺序读取时**才能使用。
+
+`fread`函数用于读取二进制数据，`fwrite`函数用于写入二进制数据。
+
+~~~C
+size_t fread(void *buffer, size_t size, size_t count, FILE *stream);
+size_t fwrite(void *buffer, size_t size, size_t count, FILE* stream);
+~~~
+
+`buffer`是一个指向用于保存数据的内存位置的指针，`size`是缓冲区中每个元素的字节数，`count`是读取或写入的元素数，当然`stream`是数据读取或写入的流。
+
+一个例子
+
+~~~C
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// 1. 定义一个存储数据的结构体
+typedef struct {
+  int id;
+  char name[20];
+  float salary;
+} Employee;
+
+// 辅助函数：打印结构体内容
+void print_employee(const Employee *e) // const *类型 指向常量的指针
+{
+  fprintf(stdout, "ID: %d, Name: %-20s, Salary: %.2f\n", e->id, e->name,
+          e->salary);
+}
+
+// 定义文件名
+#define DATA_FILE "employees.bin"
+
+int main(void) {
+  // 2. 准备数据：一个结构体数组
+  Employee staff_data[] = {{101, "Alice Johnson", 60000.00f},
+                           {102, "Bob Smith", 75000.50f},
+                           {103, "Charlie Brown", 50000.25f}};
+  const size_t num_employees = sizeof(staff_data) / sizeof(Employee);
+
+  // ------------------------------------------------------------------------
+  // 第一步：使用 fwrite 将结构体数组写入文件（输出流）
+  // ------------------------------------------------------------------------
+
+  FILE *output_file = fopen(DATA_FILE, "wb"); // write binary
+  if (output_file == NULL) {
+    perror("Error opening output file");
+    return EXIT_FAILURE;
+  }
+
+  // fwrite(ptr, size, count, stream)
+  // ptr: 要写入的数据块的起始地址
+  // size: 每个数据块的大小（这里是 Employee 结构体的大小）
+  // count: 要写入的数据块的数量（这里是数组元素的数量）
+  // stream: 文件流指针
+
+  size_t written_count =
+      fwrite(staff_data, sizeof(Employee), num_employees, output_file);
+
+  if (written_count == num_employees) {
+    fprintf(stdout, "成功将 %zu 个 Employee 记录写入文件：%s\n", written_count,
+            DATA_FILE);
+  } else {
+    fprintf(stderr, "警告：写入失败或部分失败。\n");
+  }
+
+  fclose(output_file);
+
+  // ------------------------------------------------------------------------
+  // 第二步：使用 fread 从文件中读取结构体数组（输入流）
+  // ------------------------------------------------------------------------
+
+  FILE *input_file = fopen(DATA_FILE, "rb"); // read binary
+  if (input_file == NULL) {
+    perror("Error opening input file for reading");
+    return EXIT_FAILURE;
+  }
+
+  // 3. 准备接收数据的缓冲区（创建一个新的数组来存储读取的数据）
+  Employee read_data[num_employees];
+
+  fprintf(stdout, "\n从文件读取数据并输出到标准输出(stdout)：\n");
+  printf("--------------------------------------------------------\n");
+
+  // fread(ptr, size, count, stream)
+  // ptr: 存储读取数据的内存地址
+  // size: 每个数据块的大小（这里是 Employee 结构体的大小）
+  // count: 尝试读取的数据块的数量
+  // stream: 文件流指针
+  size_t read_count =
+      fread(read_data, sizeof(Employee), num_employees, input_file);
+
+  if (read_count == num_employees) {
+    printf("成功读取 %zu 个 Employee 记录。\n", read_count);
+
+    // 4. 将读取到的结构体数组元素输出到标准输出
+    for (size_t i = 0; i < read_count; i++) {
+      printf("Record %zu: ", i + 1);
+      print_employee(&read_data[i]);
+    }
+  } else {
+    fprintf(stderr, "警告：尝试读取 %zu 个记录，但只读取了 %zu 个。\n",
+            num_employees, read_count);
+  }
+
+  fclose(input_file);
+
+  // 清理创建的文件（可选）
+  // remove(DATA_FILE);
+
+  return EXIT_SUCCESS;
+}
+~~~
+
+## 15.12 刷新和定位数据
+
+当我们需要立即把输出缓冲区的数据进行物理写入时，应该使用`fflush`这个函数。例如，调用`fflush`函数保证调试信息实际打印出来，而不是保存在缓冲区中直到以后才打印。
+
+~~~C
+int fflush(FILE *stream);
+~~~
+
+在正常情况下，数据以线性的方式写入，这意味着后面写入的数据在文件中的位置是在以前所有写入数据的后面。C同时支持随机访问I/O，也就是以任意顺序访问文件的不同位置。
+`ftell`和`fseek`函数支持上面的操作。
+
+~~~C
+long ftell(FILE *stream);
+int fseek(FILE *stream, long offset, int from);
+~~~
+
+`ftell`返回流的当前位置，也就是说，下一个读取或写入将要开始的位置距离文件起始位置的偏移量(offset)。这个函数允许你保存一个文件的当前位置，这样你可能在将来回到这个位置。在二进制流中这个值就是当前位置距离文件其实位置之间的字节数。
+
+在文本流中这个值表示一个位置，但它并不一定准确地表示当前位置和文件起始位置之间的字符数，因为有些系统将对行末字符进行翻译转换。但是，`ftell`函数返回的值总是可以用于`fseek`函数中，作为一个距离文件起始位置的偏移量。
+
+`fseek`函数运行你在一个流中定位。这个操作将改变下一个读取或写入操作的位置。它的第一个参数是需要改变的流，第二个和第三个参数标识文件中需要定位的位置。
+
+试图定位到一个文件的起始位置之前是一个错误。定位到文件尾之后并进行写入将扩展这个文件。定位到文件尾之后并进行读取将导致返回一条“到达文件尾”的信息。在二进制流中，从**SEEK_END**进行定位可能不被支持，所以应该避免。在文本流中，如果from是**SEEK_CUR**或**SEEK_END**，offset必须是零。如果from是**SEEK_SET**，offset必须是一个从同一个流中以前调用`ftell`所返回的值。
+
+|如果from是|你将定位到...|
+|:---:|:---:|
+|SEEK_SET|从流的起始位置起offset个字节，offset必须是一个非负值|
+|SEEK_CUR|从流的当前位置起offset个字节，offset可正可负|
+|SEEK_END|从流的尾部位置起offset个字节，offset可正可负。如果是正值它将定位到文件尾的后面|
+
+另外还有三个额外的函数，用一些限制更严的方式指执行相同的任务。
+
+~~~C
+void rewind(FILE *stream);
+int fgetpos(FILE *stream, fpos_t *position);
+int fsetpos(FILE *stream, fpos_t const *position);
+~~~
+
+`rewind`函数将读/写指针设置回指定流的起始位置。它同时清除流的错误提示标志。`fgetpos`和`fsetpos`函数分别是`ftell`和`fseek`函数的替代方案。
+
+它们的主要区别在于这对函数接受一个指向`fpos_t`的指针作为参数。`fgetpos`在这个位置存储文件的当前位置，`fsetpos`把文件位置设置为存储在这个位置的值。
+
+一个使用这些定位函数的例子
+
+~~~C
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define FILENAME "demo_file.txt"
+
+int main(void) {
+  FILE *fp;
+
+  // ===================================================================
+  // 1. 打开文件并写入数据 (使用 "w+" 模式允许读写)
+  // ===================================================================
+
+  fp = fopen(FILENAME, "w+");
+  if (fp == NULL) {
+    perror("Error opening file");
+    return EXIT_FAILURE;
+  }
+
+  printf("--- 开始写入和控制文件指针 ---\n");
+
+  // 写入第一个字符串
+  fputs("ABCDEFGHIJKLMNOP", fp);
+  printf("1. 写入 'ABCDEFGHIJKLMNOP'\n");
+
+  // -- fflush 示例 --
+  // 尽管没有换行符，fflush 也会强制将数据从缓冲区写入磁盘
+  fflush(fp); // fputs没有写入换行符，这里本来fputs的
+              // 第一个参数写入到缓冲区还未到fp中，但是
+              // 执行fflush可以强制从缓冲区写入磁盘
+  printf("2. 使用fflush 强制刷新数据到文件。\n");
+
+  // -- ftell 和 fgetpos 示例 --
+
+  long initial_pos = ftell(fp); // 记录当前位置 （通常是16，即字符串末尾）
+  fpos_t saved_fpos;
+  fgetpos(fp, &saved_fpos); // 记录当前位置到 fpos_t 结构体中
+
+  printf("3. 当前文件指针位置(ftell): %ld\n", initial_pos);
+
+  // 写入第二个字符串
+  fputs("XYZ", fp);
+  printf("4. 写入 'XYZ'。\n");
+
+  // -- fssek 示例 --
+  // fseek(stream, offset, origin);
+  // origin: SEEK_SET 从文件开头， SEEK_CUR 从当前位置，SEEK_END 从文件末尾
+
+  // 将指针 重新定位到第五个字符(索引5)
+  fseek(fp, 5, SEEK_SET);
+  printf("5. 使用 fseek(5, SEEK_SET) 跳转到索引5。\n");
+
+  // 写入新数据 ，会覆盖掉原有的 'FGHI'
+  fputs("1234", fp);
+  printf("6. 写入 '1234' (覆盖掉原有的 'FGHI').\n");
+
+  // -- fsetpos 示例 --
+
+  // 将指针重新定位回之前 fgetpos 记录的位置 (initial_pos = 16)
+  fsetpos(fp, &saved_fpos);
+  printf("7. 使用 fsetpos 跳转回保存的位置(%ld)。\n", initial_pos);
+
+  // 写入数据，会在 16 处 继续 写入
+  fputs("999", fp);
+  printf("8. 写入'999'。\n");
+
+  // --- rewind 示例 ---
+  rewind(fp);
+  printf("9. 使用 rewind 将指针 重置到文件开头。\n");
+
+  // ===================================================================
+  // 2. 从开头读取最终文件内容
+  // ===================================================================
+
+  printf("\n--- 读取文件内容进行验证 ---\n");
+  char buffer[50];
+
+  // 尝试从头读取整个文件
+  if (fgets(buffer, sizeof(buffer), fp) != NULL)
+    printf("文件最终内容：%s\n", buffer);
+  else
+    printf("读取文件失败\n");
+
+  fclose(fp);
+
+  return EXIT_SUCCESS;
+}
+~~~
+
+## 15.13 改变缓冲方式
+
+两种改变流缓冲方式的函数
+
+~~~C
+void setbuf(FILE* stream, char *buf);
+int setvbuf(FILE* stream, char *buf, int mode, size_t size);
+~~~
+
+`setbuf` 设置了另一个数组，用于对流进行缓冲。这个数组的字符长度必须为BUFSIZ(在stdio.h中定义)。为一个流自行指定缓冲区可以防I/O函数库为它动态分配一个缓冲区。如果用一个NULL参数调用这个函数，`setbuf`函数将关闭流的所有缓冲方式。字符准确地将程序所规定的方式进行读取和写入。
+
+> 一个流缓冲区使用一个自动数组是很危险的。
+
+`setvbuf`函数更为通用。`mode`参数用于指定缓冲的类型。**_IONBF**指定一个不缓冲的流，**_IOLBF**指定一个行缓冲流，**_IOLBF**指定一个行缓冲流。所谓行缓冲，就是每当一个换行符写入到缓冲区时，缓冲区便进行刷新。
+
+`buf`和`size`参数用于指定需要使用的缓冲区。如果`buf`为NULL，那么`size`的值必须是0。
+一般而言，最好用一个长度为BUFSIZ的字符数组作为缓冲区。
+
+一个例子
+
+~~~C
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define FILENAME "big_buffer_test.txt"
+#define CUSTOM_BUF_SIZE 4096 * 4 // 16 KB 的缓冲区大小
+
+int main(void) {
+  FILE *fp;
+  char custom_buffer[CUSTOM_BUF_SIZE]; // 声明自定义的内存缓冲区
+
+  // 1. 打开文件进行写入
+  fp = fopen(FILENAME, "w");
+  if (fp == NULL) {
+    perror("Error opening file.");
+    return EXIT_FAILURE;
+  }
+
+  // 2. 使用 setvbuf 设置为全缓冲模式， 并指定自定义缓冲区
+  // 目标：只有当 16KB 缓冲区写满时，才进行一次磁盘写入操作
+  int result = setvbuf(fp, custom_buffer, _IOFBF, CUSTOM_BUF_SIZE);
+
+  if (result != 0) {
+    fprintf(stderr, "setvbuf 设置失败!\n");
+    fclose(fp);
+    return EXIT_FAILURE;
+  }
+
+  printf("文件流已设置为 %zu 字节的全缓冲模式。\n", (size_t)CUSTOM_BUF_SIZE);
+
+  // 3. 写入数据
+  for (int i = 0; i < 100; i++) {
+    fprintf(fp, "Line %d : This is buffered data.\n", i);
+  }
+
+  printf("数据已写入缓冲区，但可能尚未写入磁盘。\n");
+  // 此时，数据仍在内存中的 custom_buffer 中，直到缓冲区满或关闭。
+
+  // 4. 关闭文件(关闭时会自动冲刷缓冲区)
+  fclose(fp);
+  printf("文件已关闭，缓冲区内容已冲刷到磁盘。\n");
+
+  // remove(FILENAME); // 清理原文件(可选)
+
+  return EXIT_FAILURE;
+}
+~~~
+
+## 15.14 流错误函数
+
+下面的函数用于判断和管理流的状态
+
+~~~C
+int feof(FILE *stream);
+int ferror(FILE *stream);
+void clearerr(FILE* stream);
+~~~
+
+如果流当前处于文件尾，`feof`函数返回真。这个状态可以通过对流执行`fseek`、`rewind`或`fsetpos`函数来清除。`ferror`函数报告流的错误状态，如果出现任何读/写错误函数就返回真。最后`clearerr`函数对指定流的错误标志进行重置。
+
+一个例子
+
+~~~C
+#include <stdio.h>
+#include <stdlib.h>
+
+#define FILENAME "status_demo.txt"
+
+// 辅助函数：检查并报告文件状态
+void report_status(FILE *fp, const char *message);
+
+int main(void) {
+  FILE *fp = NULL;
+  int c;
+
+  // 1. 创建并初始化文件
+  fp = fopen(FILENAME, "w");
+  if (fp == NULL)
+    return EXIT_FAILURE;
+  fputs("Hello C I/O.\n", fp);
+  fclose(fp);
+
+  // ===================================================================
+  // 步骤 A: 正常读取直到 EOF (feof 示例)
+  // ===================================================================
+
+  fp = fopen(FILENAME, "r");
+  if (fp == NULL)
+    return EXIT_FAILURE;
+
+  printf("1. 首次打开文件，指针位于开头。\n");
+  report_status(fp, "状态A - 读取前");
+
+  // 读取所有字符直到文件结束
+  while ((c = fgetc(fp)) != EOF) {
+    // 确保所有数据都被消耗
+  }
+
+  printf("\n2. 已读取文件所有内容(fgetc 返回 EOF)。\n");
+
+  // 此时，文件指针越界，EOF标志被设置
+  report_status(fp, "状态B - 读取到 EOF 之后");
+
+  // ===================================================================
+  // 步骤 B: 制造错误并清除 (ferror 和 clearerr 示例)
+  // ===================================================================
+
+  // 使用 fseek 强制将指针移动到文件末尾（但文件仍然是只读模式）
+  // 尝试在只读文件上写入数据，在某些系统上会设置错误标志。
+  fseek(fp, 0, SEEK_END);
+
+  // 尝试写入数据，由于文件以 "r" 模式打开（只读），这将失败，并设置错误标志
+  // 注意：虽然不能写入，但 ferror 通常在尝试一个非法操作后被设置。
+  // 在本例中，我们尝试在只读文件上使用 fputc，它会失败并设置 ferror 标志。
+  c = fputc('X', fp);
+
+  // 检查 fputc 是否失败(通常返回 EOF)
+  if (c == EOF) {
+    printf("\n3. 尝试在只读流上写入数据(fputc)失败。\n");
+  }
+
+  // 此时，错误标志 ferror 被设置
+  report_status(fp, "状态C - 尝试非法写入后");
+
+  // clearerr 示例
+  clearerr(fp);
+  printf("4. 使用 clearerr() 清除了 EOF 和错误标志。\n");
+
+  report_status(fp, "状态D - clearerr() 之后");
+
+  fclose(fp);
+  remove(FILENAME); // 清理文件
+
+  return EXIT_FAILURE;
+}
+
+void report_status(FILE *fp, const char *message) {
+  printf("\n--- %s ---\n", message);
+
+  // feof(fp): 检测是否到达文件末尾
+  if (feof(fp)) {
+    printf("FE_EOF: 文件流已到达文件末尾 (EOF)。\n");
+  } else {
+    printf("FE_EOF: 文件流未到达文件末尾。\n");
+  }
+
+  // ferror(fp)：检测是否发生了 I/O 错误
+  if (ferror(fp)) {
+    printf("F_ERROR: 文件流发生 I/O 错误。\n");
+  } else {
+    printf("F_ERROR: 文件流状态正常。\n");
+  }
+}
+~~~
+
+## 15.15 临时文件
+
+使用`tempfile()`函数创建一个以`wb+`模式打开的文本文件用来临时保存数据。当程序结束时这个文件便被删除`自动被执行remove()`函数。
+
+~~~C
+FILE *tmpfile(void);
+~~~
+
+> 如果想要文件以只读模式打开或不以`wb+`模式打开必须使用`fopen()`函数操作
+
+可以使用`tmpnam()`函数为临时文件创建一个文件名
+> tmpnam() 仅仅是生成一个唯一的文件名字符串，但不创建文件。你需要手动使用 fopen() 来创建和打开文件，并负责在程序结束时手动删除它。且**tmpnam**不安全！
+
+~~~C
+char *tmpnam(char *name);
+~~~
+
+两个例子
+
+~~~C
+# include <stdio.h>
+# include <stdlib.h>
+# include <string.h>
+int main(void) {
+  FILE *tmp_fp;
+  char write_data[] = "Temporary data buffer";
+  char read_buffer[100];
+
+  // 1. 创建临时文件流
+  // FILE* tmpfile(void);
+  tmp_fp = tmpfile();
+
+  if (tmp_fp == NULL) {
+    perror("Failed to open tmpfile.\n");
+    return EXIT_FAILURE;
+  }
+
+  printf("成功创建临时文件流。该文件将在程序退出时自动删除。\n");
+
+  // 2. 写入数据到临时文件
+  if (fputs(write_data, tmp_fp) != EOF) {
+    printf("写入数据成功：\"%s\"\n", write_data);
+  } else {
+    perror("Error writing to temporary file");
+  }
+
+  // 3. 将文件指针重置到开头
+  rewind(tmp_fp);
+
+  // 4. 从临时文件读取数据
+  if (fgets(read_buffer, sizeof(read_buffer), tmp_fp) != NULL) {
+    printf("从临时文件读取数据：\"%s\"\n", read_buffer);
+  } else {
+    perror("Error reading from temporary file");
+  }
+
+  // 5. 关闭文件流
+  // 当文件流关闭时，操作系统会自动删除这个临时文件
+
+  if (fclose(tmp_fp) == 0) {
+    printf("\n临时文件流关闭成功，临时文件已被删除。\n");
+  } else {
+    perror("Error closing temporary file");
+  }
+
+  return EXIT_SUCCESS;
+}
+~~~
+
+~~~C
+# include <stdio.h>
+# include <stdlib.h>
+# include <string.h>
+# include <time.h>
+
+int main(void) {
+  char
+      temp_filename[L_tmpnam]; // L_tmpnam 是 <stdio.h> 中的宏，保证缓冲区足够大
+  FILE *fp;
+
+  // 1. 生成一个唯一的文件名
+  // 如果传入NULL， tmpnam 会使用 内部静态缓冲区，但我们使用局部数组更安全
+  if (tmpnam(temp_filename) != NULL) {
+    printf("生成的临时文件名是：%s\n", temp_filename);
+  } else {
+    fprintf(stderr, "tmpnam failed to generate temporary file.");
+    return EXIT_FAILURE;
+  }
+
+  // 2. 手动创建和打开文件
+  fp = fopen(temp_filename, "w");
+  if (fp == NULL) {
+    perror("Error opening the generated temporary file");
+    return EXIT_FAILURE;
+  }
+
+  printf("手动创建并打开了文件。\n");
+
+  // 3. 写入和关闭文件...
+  fprintf(fp, "This is manually managed temporary data.\n");
+  fclose(fp);
+
+  // 4. 【重要】手动删除文件
+  if (remove(temp_filename) == 0) {
+    printf("手动删除了临时文件：%s\n", temp_filename);
+  } else {
+    perror("Error deleting temporary file");
+  }
+  return EXIT_SUCCESS;
+}
+~~~
+
+## 15.16 文件操纵函数
+
+有两个函数用于操纵文件但不执行任何输入/输出操作。
+
+~~~C
+int remove(char const *filename);
+int rename(char const *oldname, char const *newname);
+~~~
+
+`remove`函数删除一个指定的文件。如果当remove被调用时文件处于打开状态，其结果取决于编译器。
+
+`rename`函数用于改变一个文件的名字，从**oldname**改为**newname**。如果已经有一个**newname**的文件存在，其结果取决于编译器。
